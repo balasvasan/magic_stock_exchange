@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+  </defs>
+  <rect width="1400" height="700" fill="url(#bg)"/>
+  <rect width="1400" height="700" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 2 — IDENTITY RESOLUTION + ORDER BOOK RECONSTRUCTION</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAYS 3-4 · CLOSES ARG-2 (PART 1) · CP-05 (TIME-TRAVEL) · CP-06 (FUZZY-MATCH)</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Two parallel pipelines -->
+
+  <!-- Pipeline 1: Identity Resolution (top) -->
+  <g transform="translate(60, 130)">
+    <text x="0" y="0" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">PIPELINE 1 — IDENTITY RESOLUTION (JOB-05) → SCD2 + FUZZY-MATCH</text>
+    <line x1="0" y1="10" x2="700" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">INPUT</text>
+      <text x="12" y="40" font-size="11" fill="#e5e7eb">bronze.member_cdc</text>
+      <text x="12" y="56" font-size="10" fill="#6b7280">CDC events</text>
+      <text x="12" y="72" font-size="10" fill="#6b7280">(KAVACH stream)</text>
+    </g>
+    <line x1="200" y1="65" x2="240" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(240, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">FUZZY-MATCH PASS</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">PAN edit-dist ≤ 1</text>
+      <text x="12" y="56" font-size="10.5" fill="#e5e7eb">Name similarity ≥ 0.85</text>
+      <text x="12" y="72" font-size="10.5" fill="#e5e7eb">Demat prefix match</text>
+    </g>
+    <line x1="440" y1="65" x2="480" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(480, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">SCD2 MERGE</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">canonical entity_id</text>
+      <text x="12" y="56" font-size="10.5" fill="#e5e7eb">known_aliases array</text>
+      <text x="12" y="72" font-size="10.5" fill="#e5e7eb">effective_from/to</text>
+    </g>
+    <line x1="680" y1="65" x2="720" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(720, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">OUTPUT</text>
+      <text x="12" y="40" font-size="11" fill="#e5e7eb">silver.member_master</text>
+      <text x="12" y="56" font-size="10" fill="#6b7280">SCD2 · COW · Parquet</text>
+      <text x="12" y="72" font-size="10" fill="#6b7280">consent_status carried</text>
+    </g>
+
+    <!-- planted-cases callout -->
+    <g transform="translate(940, 25)">
+      <rect width="240" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="2">CP-06 VERIFICATION</text>
+      <text x="12" y="40" font-size="11" fill="#e5e7eb">Cases 10-14 (fuzzy)</text>
+      <text x="12" y="56" font-size="11" fill="#e5e7eb">resolve to single entity_id</text>
+      <text x="12" y="72" font-size="10" fill="#9ca3af">known_aliases ≥ 2 elements</text>
+    </g>
+  </g>
+
+  <!-- Pipeline 2: Book Reconstruction (bottom) -->
+  <g transform="translate(60, 330)">
+    <text x="0" y="0" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">PIPELINE 2 — ORDER BOOK RECONSTRUCTION (JOB-06) → ICEBERG TIME-TRAVEL</text>
+    <line x1="0" y1="10" x2="700" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">INPUTS (3)</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">bronze.orders_raw</text>
+      <text x="12" y="56" font-size="10.5" fill="#e5e7eb">silver.member_master</text>
+      <text x="12" y="72" font-size="10.5" fill="#e5e7eb">silver.instrument_master</text>
+    </g>
+    <line x1="200" y1="65" x2="240" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(240, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">ENRICH</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">Add member category</text>
+      <text x="12" y="56" font-size="10.5" fill="#e5e7eb">Add instrument metadata</text>
+      <text x="12" y="72" font-size="10.5" fill="#e5e7eb">→ silver.order_events</text>
+    </g>
+    <line x1="440" y1="65" x2="480" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(480, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">WINDOW AGG</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">1S snapshots (default)</text>
+      <text x="12" y="56" font-size="10.5" fill="#e5e7eb">100MS for active alerts</text>
+      <text x="12" y="72" font-size="10.5" fill="#e5e7eb">PER_EVENT for invest.</text>
+    </g>
+    <line x1="680" y1="65" x2="720" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(720, 25)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">OUTPUT</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">gold.order_book_snapshots</text>
+      <text x="12" y="56" font-size="10" fill="#6b7280">keyed by snapshot_ts</text>
+      <text x="12" y="72" font-size="10" fill="#6b7280">microsecond-precision</text>
+    </g>
+
+    <g transform="translate(940, 25)">
+      <rect width="240" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="20" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="2">CP-05 VERIFICATION</text>
+      <text x="12" y="40" font-size="10.5" fill="#e5e7eb">FOR SYSTEM_VERSION AS OF</text>
+      <text x="12" y="56" font-size="11" fill="#e5e7eb">reproduces book at any T</text>
+      <text x="12" y="72" font-size="10" fill="#9ca3af">incl. planted Case 0 layering</text>
+    </g>
+  </g>
+
+  <!-- Bottom: Why this matters -->
+  <g transform="translate(60, 530)">
+    <rect width="1280" height="120" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+    <text x="20" y="30" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">WHY THIS CLOSES ARG-2 (PART 1)</text>
+    <text x="20" y="55" font-size="11" fill="#e5e7eb">The legacy platform couldn't reconstruct the book at past timestamps — investigators waited 11 weeks for offline reconstructions that were too late to enforce.</text>
+    <text x="20" y="78" font-size="11" fill="#e5e7eb">It also couldn't merge investors who appeared under slightly different identities across brokers — making coordinated multi-broker manipulation invisible.</text>
+    <text x="20" y="101" font-size="11" fill="#9ca3af">Module 2 fixes both: Iceberg time-travel makes book reconstruction a single SQL query; multi-signal fuzzy match merges Cases 10-14 in JOB-05.</text>
+  </g>
+</svg>

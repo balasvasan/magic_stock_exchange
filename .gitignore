@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+.env.*
+*.key
+credentials*.json
+service-account-*.json
+
+# Synthetic data — do NOT commit; students regenerate locally
+data/raw/
+data/generated/
+data/*.jsonl
+data/*.jsonl.gz
+data/*.csv
+!data/.gitkeep
+
+# Notebooks
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Build / test artifacts
+target/
+build/
+dist/
+*.log
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Iceberg local metadata (for any local Spark testing)
+warehouse/
+spark-warehouse/
+
+# Milvus local
+milvus_data/
+
+# CDP / Cloudera artifacts that shouldn't ship
+.cde/
+.cml/

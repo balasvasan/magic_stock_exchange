@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 880" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1117"/>
+      <stop offset="100%" stop-color="#161b27"/>
+    </linearGradient>
+    <pattern id="dotsBg" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/>
+    </pattern>
+    <marker id="arrowOrange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/>
+    </marker>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrowIndigo" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="880" fill="url(#bg)"/>
+  <rect width="1400" height="880" fill="url(#dotsBg)"/>
+
+  <!-- Title -->
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">DAY 1 — ENVIRONMENT SETUP</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">CP-00 + CP-01 · ~90 MINUTES · NO SURVEILLANCE LOGIC TODAY — JUST PROVISIONING</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Swimlane headers -->
+  <g transform="translate(60, 110)">
+    <!-- Lane 1: Instructor (pre-Day 1) -->
+    <g>
+      <rect width="280" height="36" rx="4" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+      <text x="140" y="16" font-size="10" fill="#9ca3af" text-anchor="middle" font-weight="700" letter-spacing="2">INSTRUCTOR (PRE-DAY 1)</text>
+      <text x="140" y="29" font-size="10" fill="#6b7280" text-anchor="middle" font-style="italic">Done before students arrive</text>
+    </g>
+    <!-- Lane 2: Student -->
+    <g transform="translate(300, 0)">
+      <rect width="380" height="36" rx="4" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+      <text x="190" y="16" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="2">STUDENT — WHAT YOU DO TODAY</text>
+      <text x="190" y="29" font-size="10" fill="#6b7280" text-anchor="middle" font-style="italic">Hands-on work in your terminal</text>
+    </g>
+    <!-- Lane 3: System -->
+    <g transform="translate(700, 0)">
+      <rect width="290" height="36" rx="4" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+      <text x="145" y="16" font-size="10" fill="#9ca3af" text-anchor="middle" font-weight="700" letter-spacing="2">SYSTEM</text>
+      <text x="145" y="29" font-size="10" fill="#6b7280" text-anchor="middle" font-style="italic">What CDP / AWS does</text>
+    </g>
+    <!-- Lane 4: Verification -->
+    <g transform="translate(1010, 0)">
+      <rect width="270" height="36" rx="4" fill="#1e2535" stroke="#f96302" stroke-width="1"/>
+      <text x="135" y="16" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="2">CHECKPOINT</text>
+      <text x="135" y="29" font-size="10" fill="#6b7280" text-anchor="middle" font-style="italic">Pass condition</text>
+    </g>
+  </g>
+
+  <!-- Lane backgrounds (vertical rails) -->
+  <g opacity="0.3">
+    <rect x="60"   y="160" width="280" height="660" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="3 4"/>
+    <rect x="360"  y="160" width="380" height="660" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="3 4"/>
+    <rect x="760"  y="160" width="290" height="660" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="3 4"/>
+    <rect x="1070" y="160" width="270" height="660" fill="none" stroke="#374151" stroke-width="1" stroke-dasharray="3 4"/>
+  </g>
+
+  <!-- ================== STEPS ================== -->
+
+  <!-- STEP 0: Instructor pre-provisions -->
+  <g transform="translate(80, 180)">
+    <rect width="240" height="68" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="12" y="20" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="1">STEP 0 — PROVISIONING</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">Per-student S3 bucket created</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">7 prefixes + AES256 + versioning</text>
+  </g>
+
+  <!-- STEP 1: Set env vars -->
+  <g transform="translate(380, 180)">
+    <rect width="340" height="68" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">STEP 1 — ENV VARS (~5 MIN)</text>
+    <text x="14" y="38" font-size="11" fill="#e5e7eb">export STUDENT_ID=s001</text>
+    <text x="14" y="54" font-size="11" fill="#e5e7eb">export BUCKET_NAME=&lt;from instructor&gt;</text>
+  </g>
+
+  <!-- arrow Step 0 → Step 1 -->
+  <line x1="320" y1="214" x2="380" y2="214" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- STEP 2: Run provisioning -->
+  <g transform="translate(380, 270)">
+    <rect width="340" height="68" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">STEP 2 — RUN PROVISION (~2 MIN)</text>
+    <text x="14" y="38" font-size="11" fill="#e5e7eb">$ bash sql/provision_environment.sh</text>
+    <text x="14" y="54" font-size="11" fill="#e5e7eb">Verifies bucket + creates 10 topics</text>
+  </g>
+
+  <!-- arrow Step 1 → Step 2 (vertical) -->
+  <line x1="550" y1="248" x2="550" y2="270" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- System: Kafka cluster receives topic CREATE calls -->
+  <g transform="translate(780, 270)">
+    <rect width="250" height="68" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+    <text x="12" y="20" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="1">KAFKA CLUSTER</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">10 topics created with</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">argus.${STUDENT_ID}.* prefix</text>
+  </g>
+  <line x1="720" y1="304" x2="780" y2="304" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- CHECKPOINT: CP-00 Check 1+2 -->
+  <g transform="translate(1090, 270)">
+    <rect width="240" height="68" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+    <text x="12" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">✓ CP-00 (BUCKET + TOPICS)</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">7 prefixes visible</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">10 topics with right partitions</text>
+  </g>
+  <line x1="1030" y1="304" x2="1090" y2="304" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- STEP 3: Run Iceberg DDL -->
+  <g transform="translate(380, 360)">
+    <rect width="340" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">STEP 3 — ICEBERG DDL (~5 MIN)</text>
+    <text x="14" y="38" font-size="10.5" fill="#e5e7eb">$ envsubst &lt; sql/bronze_ddl.sql | hive -f -</text>
+    <text x="14" y="54" font-size="10.5" fill="#e5e7eb">$ envsubst &lt; sql/silver_ddl.sql | hive -f -</text>
+    <text x="14" y="70" font-size="10.5" fill="#e5e7eb">$ envsubst &lt; sql/gold_ddl.sql | hive -f -</text>
+  </g>
+
+  <!-- arrow Step 2 → Step 3 -->
+  <line x1="550" y1="338" x2="550" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- System: Hive Metastore registers tables -->
+  <g transform="translate(780, 360)">
+    <rect width="250" height="80" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+    <text x="12" y="20" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="1">HIVE METASTORE</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">18 Iceberg tables registered</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">in 3 schemas</text>
+    <text x="12" y="70" font-size="10.5" fill="#9ca3af" font-style="italic">consent_audit: never expires</text>
+  </g>
+  <line x1="720" y1="400" x2="780" y2="400" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- CHECKPOINT: CP-00 Check 3+4 (CRITICAL) -->
+  <g transform="translate(1090, 360)">
+    <rect width="240" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="12" y="20" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="1">✓ CP-00 (TABLES) ⚠ CRITICAL</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">All 18 tables created</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">consent_audit:</text>
+    <text x="12" y="70" font-size="10.5" fill="#6366f1">history.expire.enabled=false</text>
+  </g>
+  <line x1="1030" y1="400" x2="1090" y2="400" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arrowIndigo)"/>
+
+  <!-- STEP 4: Generate synthetic data -->
+  <g transform="translate(380, 470)">
+    <rect width="340" height="68" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">STEP 4 — SYNTHETIC DATA (~10 MIN)</text>
+    <text x="14" y="38" font-size="11" fill="#e5e7eb">$ python data/generate_data.py</text>
+    <text x="14" y="54" font-size="11" fill="#e5e7eb">  --seed 42 --scale 0.05</text>
+  </g>
+
+  <!-- arrow Step 3 → Step 4 -->
+  <line x1="550" y1="440" x2="550" y2="470" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- System: 14 files written -->
+  <g transform="translate(780, 470)">
+    <rect width="250" height="68" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+    <text x="12" y="20" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="1">DATA/GENERATED/</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">14 files (~2.5M order events)</text>
+    <text x="12" y="54" font-size="10.5" fill="#9ca3af" font-style="italic">23 planted cases at idx 0–22</text>
+  </g>
+  <line x1="720" y1="504" x2="780" y2="504" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- STEP 5: Bulk-load via FLOW-SIM -->
+  <g transform="translate(380, 560)">
+    <rect width="340" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">STEP 5 — BULK-LOAD (~10 MIN)</text>
+    <text x="14" y="38" font-size="10.5" fill="#e5e7eb">$ python src/ingest/replay_simulator.py \</text>
+    <text x="14" y="54" font-size="10.5" fill="#e5e7eb">    --mode oneshot \</text>
+    <text x="14" y="70" font-size="10.5" fill="#e5e7eb">    --data-dir data/generated/</text>
+  </g>
+
+  <!-- arrow Step 4 → Step 5 -->
+  <line x1="550" y1="538" x2="550" y2="560" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- System: Kafka receives ~3M events -->
+  <g transform="translate(780, 560)">
+    <rect width="250" height="80" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1"/>
+    <text x="12" y="20" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="1">KAFKA TOPICS POPULATED</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">orders.v1 ≈ 2.5M msgs</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">trades.v1 ≈ 175K msgs</text>
+    <text x="12" y="70" font-size="11" fill="#e5e7eb">bbo.v1 ≈ 350K msgs</text>
+  </g>
+  <line x1="720" y1="600" x2="780" y2="600" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowGray)"/>
+
+  <!-- CHECKPOINT: CP-01 -->
+  <g transform="translate(1090, 560)">
+    <rect width="240" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+    <text x="12" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">✓ CP-01 (BULK-LOAD)</text>
+    <text x="12" y="38" font-size="11" fill="#e5e7eb">Topic counts within ±10%</text>
+    <text x="12" y="54" font-size="11" fill="#e5e7eb">Partitions evenly distributed</text>
+    <text x="12" y="70" font-size="10.5" fill="#9ca3af">SMM dashboard confirms</text>
+  </g>
+  <line x1="1030" y1="600" x2="1090" y2="600" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- STEP 6: Day 1 done -->
+  <g transform="translate(380, 670)">
+    <rect width="340" height="60" rx="30" fill="#f96302" fill-opacity="0.15" stroke="#f96302" stroke-width="2"/>
+    <text x="170" y="28" font-size="14" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="2">✅ DAY 1 COMPLETE</text>
+    <text x="170" y="46" font-size="11" fill="#e5e7eb" text-anchor="middle">Foundation ready · No surveillance logic yet · Module 1 starts Day 2</text>
+  </g>
+
+  <!-- arrow Step 5 → Done -->
+  <line x1="550" y1="640" x2="550" y2="670" stroke="#f96302" stroke-width="1.5" marker-end="url(#arrowOrange)"/>
+
+  <!-- ============ Tips at bottom ============ -->
+  <g transform="translate(60, 770)" font-size="11">
+    <text font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2">KEY POINTS</text>
+    <g transform="translate(0, 18)">
+      <text fill="#9ca3af">Bucket is <tspan fill="#f96302" font-weight="600">instructor-provisioned</tspan> — you only verify it.  Topics are <tspan fill="#f96302" font-weight="600">per-student</tspan> namespaced (argus.${STUDENT_ID}.*) so 16 students share one cluster.</text>
+    </g>
+    <g transform="translate(0, 36)">
+      <text fill="#9ca3af">SQL DDL files are <tspan fill="#f96302" font-weight="600">templates</tspan> — pipe through envsubst to substitute STUDENT_ID at runtime.  CP-00 Check 4 is critical: <tspan fill="#6366f1" font-weight="600">consent_audit must have history.expire.enabled=false</tspan> — CP-19 depends on it.</text>
+    </g>
+    <g transform="translate(0, 54)">
+      <text fill="#9ca3af">No NiFi, no Spark jobs, no ML, no governance enforcement today.  Today is plumbing.  Day 2 starts the streaming ingest at scale (Module 1).</text>
+    </g>
+  </g>
+</svg>

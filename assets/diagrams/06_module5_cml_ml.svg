@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+    <marker id="arInd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/></marker>
+  </defs>
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <rect width="1400" height="760" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 5 — ML ALERT RISK-RANKING</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAY 7 · CLOSES ARG-3 · CP-12 / CP-13 (AUC ≥ 0.82) / CP-14 (PRODUCTION)</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Phase headers -->
+  <g transform="translate(60, 120)" font-size="10" font-weight="700" letter-spacing="2">
+    <text x="0" y="0" fill="#9ca3af">PHASE 1 — TRAINING DATA</text>
+    <text x="290" y="0" fill="#9ca3af">PHASE 2 — HYPEROPT SEARCH</text>
+    <text x="640" y="0" fill="#9ca3af">PHASE 3 — FINAL FIT + EVAL</text>
+    <text x="950" y="0" fill="#6366f1">PHASE 4 — MANUAL GATE</text>
+    <text x="1180" y="0" fill="#9ca3af">PHASE 5 — PRODUCTION</text>
+  </g>
+  <line x1="60" y1="130" x2="1340" y2="130" stroke="#374151" stroke-width="1" stroke-dasharray="3 4" opacity="0.5"/>
+
+  <!-- Phase 1: Training data extraction -->
+  <g transform="translate(60, 150)">
+    <rect width="240" height="100" rx="6" fill="#161b27" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">LOAD LABELED ALERTS</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">bronze.legacy_alerts</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">~4.8M historical alerts</text>
+    <text x="12" y="76" font-size="10.5" fill="#e5e7eb">Label: is_confirmed_</text>
+    <text x="12" y="92" font-size="10.5" fill="#e5e7eb">manipulation</text>
+  </g>
+  <line x1="300" y1="200" x2="350" y2="200" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Phase 2: Hyperopt search -->
+  <g transform="translate(350, 150)">
+    <rect width="270" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">HYPEROPT 50 TRIALS</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">5-fold time-series CV</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Bayesian search over:</text>
+    <text x="12" y="76" font-size="10" fill="#9ca3af">n_estimators · max_depth ·</text>
+    <text x="12" y="92" font-size="10" fill="#9ca3af">learning_rate · scale_pos_wt</text>
+  </g>
+  <line x1="620" y1="200" x2="670" y2="200" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Phase 3: Final fit -->
+  <g transform="translate(670, 150)">
+    <rect width="260" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">FINAL FIT + EVAL</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">XGBoost on full train</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Evaluate on holdout 30d</text>
+    <text x="12" y="76" font-size="10.5" fill="#e5e7eb">Log to MLflow run</text>
+    <text x="12" y="92" font-size="10" fill="#9ca3af">argus_${SID}_alert_ranking_v1</text>
+  </g>
+  <line x1="930" y1="200" x2="980" y2="200" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Phase 4: Manual gate (indigo, prominent) -->
+  <g transform="translate(980, 150)">
+    <rect width="190" height="100" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="12" y="22" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="1">⚠ MANUAL APPROVAL</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">DPO clicks "Approve"</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">in MLflow UI</text>
+    <text x="12" y="76" font-size="10.5" fill="#e5e7eb">Staging → Production</text>
+    <text x="12" y="92" font-size="10" fill="#6366f1">SEBI requirement</text>
+  </g>
+  <line x1="1170" y1="200" x2="1220" y2="200" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arInd)"/>
+
+  <!-- Phase 5: Production scoring -->
+  <g transform="translate(1220, 150)">
+    <rect width="160" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">JOB-09</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">batch_score</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Every 5 minutes</text>
+    <text x="12" y="76" font-size="10.5" fill="#e5e7eb">SHAP top-10</text>
+    <text x="12" y="92" font-size="10" fill="#9ca3af">→ alert_candidates</text>
+  </g>
+
+  <!-- Pass criteria callout box -->
+  <g transform="translate(60, 300)">
+    <rect width="1280" height="100" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="20" y="28" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2">CP-13 PASS CRITERIA — THE BAR FOR PRODUCTION</text>
+    <text x="20" y="52" font-size="11" fill="#e5e7eb">AUC-ROC ≥ 0.82 (overall ranking quality)  ·  Top-decile precision ≥ 0.55 (top 10% alerts have ≥ 55% true positives)</text>
+    <text x="20" y="72" font-size="11" fill="#e5e7eb">Planted real Cases 0/1/2 score ≥ 2× planted negative Cases 6/7  ·  Calibration: predicted vs actual within 5% bins</text>
+    <text x="20" y="92" font-size="10.5" fill="#9ca3af">If ANY of these fail → DPO does NOT click Approve, model stays in Staging, training iterates next week. No automated promotion ever.</text>
+  </g>
+
+  <!-- ========== PRODUCTION SCORING DETAIL (lower half) ========== -->
+  <g transform="translate(60, 440)">
+    <text x="0" y="0" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">PRODUCTION SCORING LOOP — JOB-09 (5-MINUTE CADENCE)</text>
+    <line x1="0" y1="10" x2="640" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 30)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">FETCH PENDING</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">alert_candidates</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">WHERE model_score</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">  IS NULL</text>
+    </g>
+    <line x1="200" y1="70" x2="240" y2="70" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(240, 30)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">LOAD MODEL</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">argus_${SID}_alert_ranker</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">stage = "Production"</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">from MLflow registry</text>
+    </g>
+    <line x1="440" y1="70" x2="480" y2="70" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(480, 30)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">PREDICT + SHAP</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">predict_proba(X)[:, 1]</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">+ TreeExplainer SHAP</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">top-10 features per alert</text>
+    </g>
+    <line x1="680" y1="70" x2="720" y2="70" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(720, 30)">
+      <rect width="200" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">MERGE BACK</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">UPDATE alert_candidates</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">SET model_score, version,</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">    scored_at, shap_top_10</text>
+    </g>
+    <line x1="920" y1="70" x2="960" y2="70" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(960, 30)">
+      <rect width="320" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">SURVEILLANCE UI READS RANKED</text>
+      <text x="12" y="44" font-size="10.5" fill="#e5e7eb">SELECT * FROM vw_alert_queue</text>
+      <text x="12" y="62" font-size="10.5" fill="#e5e7eb">  ORDER BY model_score DESC LIMIT 50</text>
+      <text x="12" y="78" font-size="10" fill="#9ca3af">  → analysts work top-50 first instead of all 100K</text>
+    </g>
+  </g>
+
+  <!-- Why this closes ARG-3 -->
+  <g transform="translate(60, 580)">
+    <rect width="1280" height="160" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+    <text x="20" y="30" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">WHY THIS CLOSES ARG-3 (92% FALSE POSITIVE FLOOD)</text>
+    <text x="20" y="55" font-size="11" fill="#e5e7eb">The legacy platform fired ~100K alerts/day; analysts closed 92% as no-action — operationally indistinguishable from no surveillance per the SEBI inspection.</text>
+    <text x="20" y="74" font-size="11" fill="#e5e7eb">Module 5 keeps the deterministic rule layer (regulators won't accept "ML decided not to fire") but adds a probabilistic ranking on top. Top-decile precision ≥ 0.55 means</text>
+    <text x="20" y="93" font-size="11" fill="#e5e7eb">the top 10K of those 100K alerts have ≥ 55% true positives — analysts work the top 10K, the platform's effective signal-to-noise ratio jumps from 8% to ≥55%.</text>
+    <text x="20" y="118" font-size="11" fill="#9ca3af">Manual Production gate is required by SEBI's draft AI/ML guidance — every promotion needs a documented human approval. The DPO's audit log captures the click +</text>
+    <text x="20" y="137" font-size="11" fill="#9ca3af">the rationale typed into the dialog. No webhook automation, no shortcuts. The lab teaches this discipline so students carry it into production.</text>
+  </g>
+</svg>

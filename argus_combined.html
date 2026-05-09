@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project ARGUS — Cloudera Data Platform Surveillance Capstone</title>
+<meta name="description" content="A 10-day capstone for a Cloudera Data Platform training cohort: rebuild the surveillance stack at Magic Street Exchange, an Indian stock exchange under SEBI Show Cause Notice. Closes 5 deficiencies across streaming ingest, feature engineering, ML risk-ranking, GenAI STR drafting, and DPDP compliance.">
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-elev: #161b27;
+    --bg-card: #1e2535;
+    --bg-card-hover: #252e42;
+    --text: #e5e7eb;
+    --text-dim: #9ca3af;
+    --text-muted: #6b7280;
+    --orange: #f96302;
+    --orange-dim: rgba(249, 99, 2, 0.6);
+    --orange-soft: rgba(249, 99, 2, 0.10);
+    --indigo: #6366f1;
+    --indigo-dim: rgba(99, 102, 241, 0.6);
+    --indigo-soft: rgba(99, 102, 241, 0.10);
+    --border: #374151;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.65;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: var(--orange); text-decoration: none; border-bottom: 1px dotted var(--orange-dim); transition: border-color 0.15s; }
+  a:hover { border-bottom-color: var(--orange); }
+  a.indigo { color: var(--indigo); border-bottom-color: var(--indigo-dim); }
+  a.indigo:hover { border-bottom-color: var(--indigo); }
+
+  code, pre, .mono { font-family: var(--mono); font-size: 0.92em; }
+  code { background: var(--bg-card); padding: 1px 6px; border-radius: 3px; color: var(--text); }
+  .mono { color: var(--text-dim); }
+
+  /* ===== Layout ===== */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+
+  header.banner {
+    border-bottom: 1px solid var(--border);
+    padding: 56px 0 32px;
+    background: linear-gradient(180deg, var(--bg-elev) 0%, var(--bg) 100%);
+  }
+  header.banner .codename {
+    color: var(--orange);
+    font-weight: 700;
+    letter-spacing: 4px;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  header.banner h1 {
+    margin: 0 0 12px;
+    font-size: 44px;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+  header.banner .subtitle {
+    color: var(--text-dim);
+    font-size: 18px;
+    margin-bottom: 24px;
+    max-width: 820px;
+  }
+  header.banner .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+  }
+  header.banner .meta strong { color: var(--text); font-weight: 500; }
+
+  nav.toc {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(15, 17, 23, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+  }
+  nav.toc .container { display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; }
+  nav.toc a {
+    color: var(--text-dim);
+    border: none;
+    font-family: var(--mono);
+    letter-spacing: 0.5px;
+  }
+  nav.toc a:hover { color: var(--orange); }
+
+  main section { padding: 48px 0; border-bottom: 1px solid var(--border); }
+  main section:last-of-type { border-bottom: none; }
+
+  h2 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+  h2 .num {
+    color: var(--orange);
+    font-family: var(--mono);
+    margin-right: 12px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  h2.indigo .num { color: var(--indigo); }
+
+  h3 {
+    font-size: 19px;
+    margin: 32px 0 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  section .lede {
+    color: var(--text-dim);
+    font-size: 15px;
+    margin: 0 0 32px;
+    max-width: 780px;
+  }
+
+  p { margin: 0 0 16px; }
+  p, li { color: var(--text); }
+
+  /* ===== Cards ===== */
+  .grid { display: grid; gap: 16px; }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .grid-2 { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .card:hover { border-color: var(--orange-dim); }
+  .card.indigo:hover { border-color: var(--indigo-dim); }
+  .card .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--orange);
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .card.indigo .label { color: var(--indigo); }
+  .card h4 {
+    margin: 0 0 8px;
+    font-size: 17px;
+    font-weight: 600;
+  }
+  .card p { font-size: 14px; color: var(--text-dim); margin: 0 0 8px; }
+  .card .meta-row {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ===== Tables ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0 24px;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    color: var(--orange);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--border);
+  }
+  tbody tr:hover { background: var(--bg-elev); }
+  td.mono, th.mono, td.num { font-family: var(--mono); }
+  td.num { text-align: right; color: var(--text-dim); }
+  td.cp { font-family: var(--mono); font-weight: 600; color: var(--orange); white-space: nowrap; }
+  td.cp.indigo { color: var(--indigo); }
+
+  /* ===== Architecture SVG container ===== */
+  .arch-figure {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin: 24px 0 32px;
+    overflow-x: auto;
+  }
+  .arch-figure svg { width: 100%; height: auto; min-width: 800px; display: block; }
+  .arch-caption {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* ===== Compliance Gate banner ===== */
+  .gate-banner {
+    background: linear-gradient(90deg, var(--indigo-soft), transparent);
+    border: 1px solid var(--indigo);
+    border-left-width: 4px;
+    border-radius: 8px;
+    padding: 24px 28px;
+    margin: 24px 0;
+  }
+  .gate-banner .gate-label {
+    font-family: var(--mono);
+    color: var(--indigo);
+    font-size: 12px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .gate-banner h3 { margin-top: 0; color: var(--text); }
+  .gate-banner p { color: var(--text-dim); margin-bottom: 0; }
+
+  /* ===== Deficiencies list ===== */
+  .deficiencies {
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    margin: 24px 0;
+  }
+  .deficiency {
+    background: var(--bg-card);
+    border-left: 3px solid var(--orange);
+    border-radius: 4px;
+    padding: 16px 20px;
+  }
+  .deficiency .arg {
+    font-family: var(--mono);
+    color: var(--orange);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+  }
+  .deficiency .arg-title {
+    font-weight: 600;
+    margin: 4px 0 6px;
+    color: var(--text);
+  }
+  .deficiency p { margin: 0; font-size: 13px; color: var(--text-dim); }
+
+  /* ===== Lab grid ===== */
+  .labs-table th { width: auto; }
+  .labs-table td:first-child { white-space: nowrap; }
+  .labs-table .pass-summary { font-size: 13px; color: var(--text-dim); }
+
+  /* ===== Footer ===== */
+  footer {
+    background: var(--bg-elev);
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  footer .container { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+  footer p { margin: 0; }
+  footer .codename-foot { color: var(--orange); letter-spacing: 2px; font-weight: 600; }
+
+  /* ===== Print ===== */
+  @media print {
+    body { background: white; color: black; }
+    nav.toc { display: none; }
+    .card, table, .arch-figure { page-break-inside: avoid; }
+    a { color: black; border: none; }
+  }
+
+  @media (max-width: 720px) {
+    .container { padding: 0 20px; }
+    header.banner h1 { font-size: 32px; }
+    header.banner .meta { flex-direction: column; gap: 8px; }
+    h2 { font-size: 22px; }
+    table { font-size: 13px; }
+    th, td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="container">
+    <div class="codename">PROJECT ARGUS</div>
+    <h1>Cloudera Data Platform Surveillance Capstone</h1>
+    <p class="subtitle">A 10-day capstone for a Cloudera Data Platform training cohort: rebuild the surveillance stack at Magic Street Exchange — a fictional Indian stock exchange under SEBI Show Cause Notice — closing 5 deficiencies from streaming ingest at peak F&amp;O volume through DPDP §12 erasure with Iceberg time-travel proof.</p>
+    <div class="meta">
+      <span><strong>Customer</strong> · Magic Street Exchange (MSE), Mumbai</span>
+      <span><strong>Domain</strong> · Indian stock-exchange surveillance</span>
+      <span><strong>Duration</strong> · 10 working days</span>
+      <span><strong>Codename</strong> · ARGUS — the hundred-eyed watchman</span>
+    </div>
+  </div>
+</header>
+
+<nav class="toc">
+  <div class="container">
+    <a href="#scenario">Scenario</a>
+    <a href="#deficiencies">Deficiencies</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#data">Data sources</a>
+    <a href="#modules">Modules</a>
+    <a href="#schedule">Schedule</a>
+    <a href="#assessment">Assessment</a>
+    <a href="#labs">Labs</a>
+    <a href="#repo">Repo</a>
+  </div>
+</nav>
+
+<main>
+
+<section id="scenario">
+  <div class="container">
+    <h2><span class="num">00</span>The scenario</h2>
+
+    <p><strong>Magic Street Exchange (MSE)</strong> is the third-largest stock exchange in India, headquartered in Mumbai (BKC) with a technology center in Bangalore. Founded in 2009 by a consortium of mid-tier domestic brokerages, MSE has grown to ₹3,400 crore (~$410M USD) in annual revenue, a 920-person workforce, and a 14% market share in cash equities. Its niche is mid-cap and small-cap derivatives — about 280 underlying names where NSE and BSE underinvest, served by a self-built C++ matching engine called TARANG that emits an order-event firehose averaging 3.5 billion events per day and peaking at 9–12 billion on F&amp;O expiry Thursdays. Roughly 24 million investor accounts trade on MSE through 380 trading member firms, with the retail tilt that defines the post-2020 Indian options boom: 78% of accounts are retail, contributing 45% of order <em>volume</em> and 60% of order <em>count</em> — small, frequent, retail orders that create exactly the noisy market microstructure manipulators love to exploit.</p>
+
+    <p>In Q2 2025 SEBI issued MSE a <strong>Show Cause Notice</strong>. The 2017-vintage vendor surveillance platform that MSE had been running was sized for 40,000 events per second; it was now drowning under 150,000 events per second on expiry Thursdays, silently shedding messages once its input queue exceeded ~2 million events. The Notice cited 14 specific manipulative episodes between January and March 2025 that the platform failed to detect — episodes the regulator caught in its own market replay and traced back to a single proprietary trading firm that was eventually disgorged ₹47 crore in unlawful gains. SEBI's inspection report named four root failures: alerts firing post-session ("of substantially diminished investigative value"), 92% of fired alerts closed by analysts as no-action ("operationally indistinguishable from no surveillance at all"), a 340-report STR documentation backlog with the oldest 70 days old, and "demonstrably inadequate" lineage and access controls on personal data of millions of investors. SEBI gave MSE 18 months to remediate or face restrictions on new product approvals. The DPDP Rules 2025 took effect in November 2025 in parallel, putting MSE in active enforcement scope under a separate regulator (the Data Protection Board) with penalties up to ₹250 crore for inadequate safeguards. Independent estimate of combined regulatory exposure: <strong>₹150–300 crore worst case</strong>, plus ₹95 crore in already-foregone listing revenue from institutional clients citing "concerns about market integrity."</p>
+
+    <p>The board approved a <strong>₹220 crore (~$26M) program</strong> — internally codenamed <strong>ARGUS</strong>, after the hundred-eyed watchman of Greek myth who never had every eye closed at once — to rebuild the entire surveillance stack on Cloudera Data Platform. Your job over the next ten days is to be the data engineering, ML engineering, and governance team that builds it. You will design and operate a streaming-ingest layer that absorbs the F&amp;O firehose without falling behind, derive the cross-product temporal features that detect spoofing and layering and the Jane Street-style index manipulation patterns that defeated the legacy platform, train and deploy a supervised ML model that finally separates the 8% real signal from the 92% rules-engine noise, build a GenAI engine that drafts the SEBI-compliant Suspicious Transaction Reports analysts currently spend an hour each writing by hand, and prove DPDP Act 2023 compliance with cryptographic-grade Iceberg time-travel evidence that survives a Data Protection Board audit. Every deficiency closes.</p>
+  </div>
+</section>
+
+<section id="deficiencies">
+  <div class="container">
+    <h2><span class="num">01</span>The five deficiencies</h2>
+    <p class="lede">Each deficiency closes via specific checkpoints across specific modules. Failure to close all five is a SEBI / DPDP enforcement risk.</p>
+
+    <div class="deficiencies">
+      <div class="deficiency">
+        <div class="arg">ARG-1</div>
+        <div class="arg-title">Peak F&amp;O volume crisis</div>
+        <p>Legacy CEP engine sized for 40K events/sec; chokes at the 150K/sec expiry-Thursday peak — and even when it does fire, post-close detection latency makes intervention impossible. Closed by Module 1 (CDF + PyFlink CEP + SQL Stream Builder — three streaming engines, one Kafka backbone, sub-second pattern detection).</p>
+      </div>
+      <div class="deficiency">
+        <div class="arg">ARG-2</div>
+        <div class="arg-title">Temporal feature gap</div>
+        <p>No cross-product features; cannot detect Jane Street pattern (cash + futures + options correlated manipulation). Closed by Modules 2–3 (CDE / Spark on Iceberg).</p>
+      </div>
+      <div class="deficiency">
+        <div class="arg">ARG-3</div>
+        <div class="arg-title">92% false-positive flood</div>
+        <p>Analysts buried in noise; real cases buried with them. Closed by Module 5 (CML / XGBoost alert risk-ranking with manual promotion gates).</p>
+      </div>
+      <div class="deficiency">
+        <div class="arg">ARG-4</div>
+        <div class="arg-title">STR documentation backlog</div>
+        <p>40-minute hand-written narratives, 340-report backlog, oldest 70 days old. Closed by Module 6 (CAII / GenAI RAG engine — locally hosted).</p>
+      </div>
+      <div class="deficiency">
+        <div class="arg">ARG-5</div>
+        <div class="arg-title">No lineage / consent / erasure</div>
+        <p>DPDP §6(4) consent withdrawal unenforceable; DPDP §12 erasure unprovable. Closed by Modules 4 + 7 (CDW governed views, SDX Atlas + Ranger).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="architecture">
+  <div class="container">
+    <h2><span class="num">02</span>Architecture</h2>
+    <p class="lede">Four layers, top-down: <strong>Govern</strong> (SDX), <strong>Serve</strong> (CDW + CML + CAII + CDV), <strong>Process</strong> (CDE on Iceberg with MLflow + Airflow), <strong>Ingest</strong> (CDF/NiFi consuming 9 production + 2 DLQ Kafka topics). Govern cuts horizontally across all three lower layers.</p>
+
+    <div class="arch-figure">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+        <defs>
+          <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0f1117"/>
+            <stop offset="100%" stop-color="#161b27"/>
+          </linearGradient>
+          <linearGradient id="ingestGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f96302" stop-opacity="0.12"/>
+            <stop offset="100%" stop-color="#f96302" stop-opacity="0.04"/>
+          </linearGradient>
+          <linearGradient id="processGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f96302" stop-opacity="0.18"/>
+            <stop offset="100%" stop-color="#f96302" stop-opacity="0.06"/>
+          </linearGradient>
+          <linearGradient id="serveGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#f96302" stop-opacity="0.24"/>
+            <stop offset="100%" stop-color="#f96302" stop-opacity="0.08"/>
+          </linearGradient>
+          <linearGradient id="governGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#6366f1" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="#6366f1" stop-opacity="0.10"/>
+          </linearGradient>
+          <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="0.7" fill="#f96302" fill-opacity="0.10"/>
+          </pattern>
+          <marker id="arrowOrange" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/>
+          </marker>
+        </defs>
+        <rect width="1200" height="760" fill="url(#bgGrad)"/>
+        <rect width="1200" height="760" fill="url(#dots)"/>
+        <text x="60" y="56" font-size="28" font-weight="700" fill="#f96302" letter-spacing="3">PROJECT ARGUS</text>
+        <text x="60" y="84" font-size="14" fill="#9ca3af" letter-spacing="1.5">FOUR-LAYER SURVEILLANCE PLATFORM ON CLOUDERA DATA PLATFORM</text>
+        <line x1="60" y1="100" x2="280" y2="100" stroke="#f96302" stroke-width="2"/>
+        <g transform="translate(60, 130)">
+          <rect width="1080" height="120" rx="8" fill="url(#governGrad)" stroke="#6366f1" stroke-width="1.5" stroke-opacity="0.5"/>
+          <text x="20" y="32" font-size="11" font-weight="700" fill="#6366f1" letter-spacing="2">LAYER 4 — GOVERN  ·  SDX</text>
+          <text x="20" y="58" font-size="14" fill="#e5e7eb" font-weight="600">Atlas classifications  ·  Ranger row + column policies  ·  DPDP audit log</text>
+          <text x="20" y="80" font-size="13" fill="#9ca3af">Lineage capture across Bronze→Silver→Gold  ·  Time-travel erasure proofs  ·  Access audit trail</text>
+          <text x="20" y="102" font-size="11" fill="#6b7280" letter-spacing="1">CLOSES ARG-5 (PART 2)</text>
+          <g transform="translate(900, 30)">
+            <rect width="160" height="64" rx="4" fill="#1e2535" stroke="#6366f1" stroke-width="1.5"/>
+            <text x="80" y="22" font-size="9" font-weight="700" fill="#6366f1" letter-spacing="1.5" text-anchor="middle">COMPLIANCE GATE</text>
+            <text x="80" y="42" font-size="11" fill="#e5e7eb" text-anchor="middle">DPDP §6(4) + §12</text>
+            <text x="80" y="56" font-size="11" fill="#e5e7eb" text-anchor="middle">SEBI Master Circular</text>
+          </g>
+        </g>
+        <g transform="translate(60, 270)">
+          <rect width="1080" height="140" rx="8" fill="url(#serveGrad)" stroke="#f96302" stroke-width="1.5" stroke-opacity="0.6"/>
+          <text x="20" y="32" font-size="11" font-weight="700" fill="#f96302" letter-spacing="2">LAYER 3 — SERVE</text>
+          <g transform="translate(20, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">CDW · APACHE IMPALA</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">Governed views over Gold</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Surveillance UI + BI</text>
+          </g>
+          <g transform="translate(285, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">CLOUDERA AI · CML</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">XGBoost batch scoring</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Alert risk model · 5-min cadence</text>
+          </g>
+          <g transform="translate(550, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">CAII · GENAI</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">Llama 3.1 70B + Milvus</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">STR narrative drafter (RAG)</text>
+          </g>
+          <g transform="translate(815, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">CDV · DASHBOARDS</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">Surveillance ops KPIs</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Backlog + FP rate + TTI</text>
+          </g>
+        </g>
+        <g transform="translate(60, 430)">
+          <rect width="1080" height="140" rx="8" fill="url(#processGrad)" stroke="#f96302" stroke-width="1.5" stroke-opacity="0.6"/>
+          <text x="20" y="32" font-size="11" font-weight="700" fill="#f96302" letter-spacing="2">LAYER 2 — PROCESS</text>
+          <g transform="translate(20, 48)">
+            <rect width="510" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">CDE · APACHE SPARK ON ICEBERG</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">JOB-01..09  ·  Bronze → Silver → Gold</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Identity resolution · Order book reconstruction · Temporal + cross-product features</text>
+          </g>
+          <g transform="translate(550, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">MLFLOW</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">Experiment tracking</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Model registry · Drift</text>
+          </g>
+          <g transform="translate(815, 48)">
+            <rect width="245" height="76" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+            <text x="14" y="22" font-size="11" font-weight="700" fill="#f96302" letter-spacing="1">AIRFLOW ON CDE</text>
+            <text x="14" y="42" font-size="12" fill="#e5e7eb">Job orchestration</text>
+            <text x="14" y="60" font-size="11" fill="#9ca3af">Weekly retrain · DAGs</text>
+          </g>
+        </g>
+        <g transform="translate(60, 590)">
+          <rect width="1080" height="140" rx="8" fill="url(#ingestGrad)" stroke="#f96302" stroke-width="1.5" stroke-opacity="0.6"/>
+          <text x="20" y="32" font-size="11" font-weight="700" fill="#f96302" letter-spacing="2">LAYER 1 — INGEST  ·  CDF</text>
+          <text x="20" y="56" font-size="14" fill="#e5e7eb" font-weight="600">Apache NiFi  ·  9 prod + 2 DLQ Kafka topics  ·  126 partitions  ·  Schema validation + DLQ routing</text>
+          <g transform="translate(20, 76)" font-size="10" fill="#e5e7eb">
+            <g><rect width="106" height="22" rx="11" fill="#1e2535" stroke="#f96302" stroke-width="1"/><text x="53" y="15" text-anchor="middle">TARANG · 3.5B/d</text></g>
+            <g transform="translate(116, 0)"><rect width="86" height="22" rx="11" fill="#1e2535" stroke="#f96302" stroke-width="1"/><text x="43" y="15" text-anchor="middle">KAVACH · KYC</text></g>
+            <g transform="translate(212, 0)"><rect width="100" height="22" rx="11" fill="#1e2535" stroke="#f96302" stroke-width="1"/><text x="50" y="15" text-anchor="middle">NIPATAN · trades</text></g>
+            <g transform="translate(322, 0)"><rect width="106" height="22" rx="11" fill="#1e2535" stroke="#f96302" stroke-width="1"/><text x="53" y="15" text-anchor="middle">PRATEEK · symbols</text></g>
+            <g transform="translate(438, 0)"><rect width="106" height="22" rx="11" fill="#1e2535" stroke="#f96302" stroke-width="1"/><text x="53" y="15" text-anchor="middle">SMRITI · alerts</text></g>
+            <g transform="translate(554, 0)"><rect width="92" height="22" rx="11" fill="#1e2535" stroke="#6366f1" stroke-width="1"/><text x="46" y="15" text-anchor="middle">SEBI feed</text></g>
+            <g transform="translate(656, 0)"><rect width="120" height="22" rx="11" fill="#1e2535" stroke="#6366f1" stroke-width="1"/><text x="60" y="15" text-anchor="middle">NSE/BSE BBO ticks</text></g>
+            <g transform="translate(786, 0)"><rect width="92" height="22" rx="11" fill="#1e2535" stroke="#6366f1" stroke-width="1"/><text x="46" y="15" text-anchor="middle">News wire</text></g>
+          </g>
+          <text x="1060" y="124" font-size="11" fill="#6b7280" letter-spacing="1" text-anchor="end">CLOSES ARG-1</text>
+        </g>
+        <g stroke="#f96302" stroke-width="1.5" fill="none" opacity="0.65">
+          <path d="M 600 590 L 600 570" marker-end="url(#arrowOrange)"/>
+          <path d="M 600 430 L 600 410" marker-end="url(#arrowOrange)"/>
+        </g>
+        <g stroke="#6366f1" stroke-width="1.5" fill="none" opacity="0.55" stroke-dasharray="4 3">
+          <path d="M 600 270 L 600 250"/>
+        </g>
+      </svg>
+      <p class="arch-caption">Full architecture write-up: <a href="docs/01_architecture.md">docs/01_architecture.md</a></p>
+    </div>
+
+    <h3>Service-to-layer mapping</h3>
+    <table>
+      <thead><tr><th>CDP service</th><th>Layer</th><th>Role in ARGUS</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">Apache NiFi (CDF)</td><td>1 — Ingest</td><td>Streaming + batch ingestion, schema validation, DLQ routing, Atlas tag attribution</td></tr>
+        <tr><td class="mono">Apache Kafka</td><td>1 — Ingest</td><td>Event backbone (9 production + 2 DLQ topics, 126 partitions) shared by all three streaming engines</td></tr>
+        <tr><td class="mono">Apache Spark (CDE)</td><td>2 — Process</td><td>Bronze→Silver→Gold transforms, feature engineering, model scoring (JOB-01..09, JOB-12)</td></tr>
+        <tr><td class="mono">Apache Flink (CSA)</td><td>2 — Process</td><td>Real-time CEP for R-101 SPOOFING + R-102 LAYERING (JOB-10, p99 &lt; 800ms)</td></tr>
+        <tr><td class="mono">SQL Stream Builder (CSA)</td><td>2 — Process</td><td>Analyst-deployed streaming SQL for R-104 cross-product imbalance (JOB-11)</td></tr>
+        <tr><td class="mono">Apache Iceberg</td><td>2 — Process</td><td>Open table format with time-travel + schema evolution; MOR/ORC for Bronze, COW/Parquet for Silver/Gold</td></tr>
+        <tr><td class="mono">Apache Impala (CDW)</td><td>3 — Serve</td><td>SQL serving for surveillance UI, BI queries, governed views</td></tr>
+        <tr><td class="mono">Cloudera AI (CML)</td><td>3 — Serve</td><td>XGBoost training, Hyperopt search, MLflow tracking + registry</td></tr>
+        <tr><td class="mono">Cloudera AI Inference</td><td>3 — Serve</td><td>Locally-hosted LLM + Milvus vector store for STR drafting</td></tr>
+        <tr><td class="mono">Apache Atlas (SDX)</td><td>4 — Govern</td><td>Classification tags, automatic lineage capture, audit trail</td></tr>
+        <tr><td class="mono">Apache Ranger (SDX)</td><td>4 — Govern</td><td>Row/column policies, role-based access enforcement</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="data">
+  <div class="container">
+    <h2><span class="num">03</span>Data sources</h2>
+    <p class="lede">Five internal source systems (Hindi/Sanskrit-named, reflecting real Indian financial-services convention) plus three external feeds. Detailed write-ups: <a href="docs/02_data_sources.md">docs/02_data_sources.md</a>.</p>
+
+    <table>
+      <thead><tr><th>System</th><th>Type</th><th>Volume</th><th>Cadence</th><th>Lands in</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">TARANG</td><td>Matching engine telemetry</td><td class="num">3.5B events/day</td><td>Real-time multicast</td><td class="mono">orders_raw</td></tr>
+        <tr><td class="mono">KAVACH</td><td>KYC + member master</td><td class="num">~12M rows; 50K daily deltas</td><td>Hourly CDC (Debezium)</td><td class="mono">member_cdc</td></tr>
+        <tr><td class="mono">NIPATAN</td><td>Cleared trades</td><td class="num">~280M events/day</td><td>Trade-by-trade, 50–200ms lag</td><td class="mono">trades_raw</td></tr>
+        <tr><td class="mono">PRATEEK</td><td>Instrument + corp actions</td><td class="num">~7,600 reference rows</td><td>EOD + real-time state</td><td class="mono">instrument_cdc</td></tr>
+        <tr><td class="mono">SMRITI</td><td>Legacy alert archive</td><td class="num">~4.8M historical alerts</td><td>Nightly batch</td><td class="mono">legacy_alerts</td></tr>
+        <tr><td class="mono">SEBI SI Portal</td><td>Regulatory actions + watchlist</td><td class="num">~800 actions/year</td><td>Real-time + daily batch</td><td class="mono">external_feeds</td></tr>
+        <tr><td class="mono">NSE/BSE BBO</td><td>Cross-venue best bid/offer</td><td class="num">~500M ticks/day</td><td>Real-time vendor Kafka</td><td class="mono">external_feeds</td></tr>
+        <tr><td class="mono">News wire</td><td>Disclosures + headlines</td><td class="num">~25K headlines/quarter</td><td>Real-time REST/Kafka</td><td class="mono">external_feeds</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="modules">
+  <div class="container">
+    <h2><span class="num">04</span>Modules</h2>
+    <p class="lede">Seven modules across ten days. Each module closes one or more deficiencies; each module's labs verify specific PRD-locked behaviors at named checkpoints.</p>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="label">MODULE 1  ·  DAYS 2–4 AM  ·  CDF + CSA</div>
+        <h4>Streaming Ingest &amp; Real-Time Detection</h4>
+        <p>NiFi flows for the four ingest families; Spark Structured Streaming jobs JOB-01..04 writing Bronze; <strong>PyFlink CEP (JOB-10) detecting R-101 SPOOFING + R-102 LAYERING with p99 &lt; 800ms</strong>; <strong>SSB SQL (JOB-11) detecting R-104 cross-product imbalance, deployed via UI by analysts</strong>; FLOW-SIM continuous mode hitting 150K events/sec across all three engines simultaneously.</p>
+        <div class="meta-row">Closes ARG-1  ·  CP-02 / <span style="color:var(--indigo)">CP-02b</span> / CP-03 / CP-04 / <span style="color:var(--indigo)">CP-04b</span>  ·  <a href="docs/module-1-streaming-ingest.md">module-1-streaming-ingest.md</a></div>
+      </div>
+      <div class="card">
+        <div class="label">MODULE 2  ·  DAY 4 PM – 5  ·  CDE</div>
+        <h4>Identity Resolution &amp; Book Reconstruction</h4>
+        <p>JOB-05 builds member_master with SCD2 + multi-signal fuzzy match (cases 10–14). JOB-06 reconstructs per-second order-book snapshots using Iceberg time-travel.</p>
+        <div class="meta-row">Closes ARG-2 (part 1)  ·  CP-05 / CP-06  ·  <a href="docs/module-2-cde-identity.md">module-2-cde-identity.md</a></div>
+      </div>
+      <div class="card">
+        <div class="label">MODULE 3  ·  DAY 5  ·  CDE</div>
+        <h4>Temporal &amp; Cross-Product Features</h4>
+        <p>JOB-07 produces per-member temporal features + cross-product imbalance. JOB-08 fires deterministic rules R-101..R-105. All 10 manipulation cases (0–9) surface; Case 2 (Jane Street) hits the 7.0× threshold.</p>
+        <div class="meta-row">Closes ARG-2 (part 2)  ·  CP-07 / CP-08 / CP-09  ·  <a href="docs/module-3-cde-features.md">module-3-cde-features.md</a></div>
+      </div>
+      <div class="card">
+        <div class="label">MODULE 4  ·  DAY 6  ·  CDW + SDX</div>
+        <h4>Governed Views</h4>
+        <p>7 views in argus_${STUDENT_ID}_views. 3 Ranger policy families: DPDP §6(4) row filter, PII column mask, time-bound investigation access. Same view, different shape per role.</p>
+        <div class="meta-row">Closes ARG-5 (part 1)  ·  CP-10 / CP-11  ·  <a href="docs/module-4-cdw-governed-views.md">module-4-cdw-governed-views.md</a></div>
+      </div>
+      <div class="card">
+        <div class="label">MODULE 5  ·  DAY 7  ·  CML</div>
+        <h4>ML Alert Risk-Ranking</h4>
+        <p>XGBoost binary classifier with Hyperopt 50-trial Bayesian search + 5-fold time-series CV. AUC ≥ 0.82, top-decile precision ≥ 0.55. Manual Staging→Production gate.</p>
+        <div class="meta-row">Closes ARG-3  ·  CP-12 / CP-13 / CP-14  ·  <a href="docs/module-5-cml-ml.md">module-5-cml-ml.md</a></div>
+      </div>
+      <div class="card">
+        <div class="label">MODULE 6  ·  DAY 8  ·  CAII</div>
+        <h4>GenAI STR Narrative Engine (RAG)</h4>
+        <p>Locally-hosted Llama 3.1 70B + Milvus. 5 PRD-locked system-prompt constraints (no fabrication, cite PFUTP, describe behavior not intent, no named cases, English). 60-min hand-drafting → 8-min review.</p>
+        <div class="meta-row">Closes ARG-4  ·  CP-15 / CP-16  ·  <a href="docs/module-6-cml-genai.md">module-6-cml-genai.md</a></div>
+      </div>
+      <div class="card indigo">
+        <div class="label">MODULE 7  ·  DAY 9  ·  SDX</div>
+        <h4>Governance &amp; DPDP Compliance</h4>
+        <p>6 PRD-locked Atlas classifications. DPDP §6(4) consent withdrawal. <strong>DPDP §12 erasure with Iceberg <code>FOR SYSTEM_VERSION AS OF</code> proof — the COMPLIANCE GATE.</strong></p>
+        <div class="meta-row">Closes ARG-5 (part 2)  ·  CP-17 / CP-18 / CP-19  ·  <a href="docs/module-7-sdx-governance.md" class="indigo">module-7-sdx-governance.md</a></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="schedule">
+  <div class="container">
+    <h2><span class="num">05</span>10-day schedule</h2>
+    <p class="lede">Module-to-day pacing with checkpoint gates. Full breakdown: <a href="docs/schedule.md">docs/schedule.md</a>.</p>
+
+    <table>
+      <thead><tr><th>Day</th><th>Module</th><th>Checkpoints</th><th>Cumulative deficiency closure</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Setup — provisioning + Day 1 data load</td><td class="cp">CP-00, CP-01</td><td>—</td></tr>
+        <tr><td>2</td><td>Module 1 — NiFi flows + Spark Structured Streaming Bronze ingest live</td><td class="cp">CP-02, CP-04</td><td>—</td></tr>
+        <tr><td>3</td><td>Module 1 — PyFlink CEP (AM) + SSB SQL (PM): real-time detection live</td><td class="cp"><span style="color:var(--indigo)">CP-02b</span>, <span style="color:var(--indigo)">CP-04b</span></td><td>—</td></tr>
+        <tr><td>4</td><td>Module 1 finish AM (3-engine throughput test) → Module 2 start PM</td><td class="cp">CP-03</td><td><strong>ARG-1</strong></td></tr>
+        <tr><td>5</td><td>Module 2 — identity + book reconstruction</td><td class="cp">CP-05, CP-06</td><td>ARG-1, ARG-2 (part 1)</td></tr>
+        <tr><td>6</td><td>Module 3 — temporal + cross-product features</td><td class="cp">CP-07, CP-08, CP-09</td><td>ARG-1, ARG-2</td></tr>
+        <tr><td>7</td><td>Module 4 — governed views + Ranger; Module 5 training kicks off</td><td class="cp">CP-10, CP-11, CP-12</td><td>ARG-1, ARG-2, ARG-5 (part 1)</td></tr>
+        <tr><td>8</td><td>Module 5 finish (perf gates) + Module 6 GenAI / RAG</td><td class="cp">CP-13, CP-14, CP-15, CP-16</td><td>+ ARG-3, + ARG-4</td></tr>
+        <tr><td>9</td><td>Module 7 — SDX + DPDP (full day; CP-19 gate preserved)</td><td class="cp">CP-17, CP-18, <span style="color:var(--indigo)">CP-19</span></td><td><strong>All 5 deficiencies closed</strong></td></tr>
+        <tr><td>10</td><td>Capstone — integration + assessment</td><td class="cp">CP-20</td><td>End-to-end integration test</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="assessment">
+  <div class="container">
+    <h2><span class="num">06</span>Assessment</h2>
+    <p class="lede">Six weighted components plus a 5% bonus. Pass threshold: <strong>≥ 70% overall AND CP-19 must pass</strong>. CP-19 is non-negotiable — failing it fails the capstone regardless of overall score.</p>
+
+    <h3>Component rubric</h3>
+    <table>
+      <thead><tr><th>Component</th><th>Weight</th><th>Pass criterion (summary)</th></tr></thead>
+      <tbody>
+        <tr><td>Module 1 — Streaming ingest + real-time detection (CP-02 / <span style="color:var(--indigo)">CP-02b</span> / CP-03 / CP-04 / <span style="color:var(--indigo)">CP-04b</span>)</td><td class="num">15%</td><td>150K ev/s sustained 10 min; DLQ &lt; 0.01%; p99 latency &lt; 30s; <strong>PyFlink CEP detects Case 0 with p99 &lt; 800ms; SSB SQL detects Case 2 within 60s</strong></td></tr>
+        <tr><td>Modules 2–3 — Feature engineering (CP-05–09)</td><td class="num">25%</td><td>All 10 cases surface; book reconstruction passes time-travel; Case 2 imbalance ≥ 7.0</td></tr>
+        <tr><td>Module 4 — Governed views (CP-10, 11)</td><td class="num">10%</td><td>Role-based views; cases 15–19 filtered for non-statutory, visible to DPO</td></tr>
+        <tr><td>Module 5 — ML model (CP-12, 13, 14)</td><td class="num">20%</td><td>AUC ≥ 0.82; top-decile precision ≥ 0.55; manual Production promotion; JOB-09 every 5 min</td></tr>
+        <tr><td>Module 6 — GenAI drafter (CP-15, 16)</td><td class="num">15%</td><td>5 valid JSON drafts; no fabrication; correct PFUTP citation; no constraint violations</td></tr>
+        <tr><td>Module 7 — Compliance (CP-17, 18, <span style="color:var(--indigo)">19</span>)</td><td class="num">15%</td><td>6 Atlas tags; 3 Ranger policies; <strong>CP-19 COMPLIANCE GATE: DPDP §12 erasure provable via time-travel</strong></td></tr>
+        <tr><td>Bonus — Cross-product Jane Street replication</td><td class="num">+5%</td><td>Detect Case 2 from features alone, without R-104 firing</td></tr>
+      </tbody>
+    </table>
+
+    <div class="gate-banner">
+      <div class="gate-label">⚠  CP-19  ·  COMPLIANCE GATE</div>
+      <h3>DPDP §12 erasure provable via Iceberg time-travel</h3>
+      <p>Cases 20–22 are erased through the workflow at <code>src/governance/gdpr_erasure_workflow.py</code>. The pre-erasure Iceberg snapshot ID is captured in <code>argus_${STUDENT_ID}_gold.consent_audit</code> (which has <code>history.expire.enabled=false</code>, so its history never expires). A post-erasure <code>FOR SYSTEM_VERSION AS OF &lt;pre_snap&gt;</code> query must return the erased investor's row; the same query at current snapshot must return zero rows; the audit row in <code>consent_audit</code> must persist. All three conditions for all three planted cases. Failure on any of them = capstone fail. See <a href="labs/lab-7-3-erasure.md" class="indigo">labs/lab-7-3-erasure.md</a>.</p>
+    </div>
+
+    <h3>The 21 checkpoints (+ 2 v1.2 sub-checkpoints)</h3>
+    <table>
+      <thead><tr><th>CP</th><th>Module</th><th>Verifies</th><th>Lab</th></tr></thead>
+      <tbody>
+        <tr><td class="cp">CP-00</td><td>Setup</td><td>Environment up; 11 Kafka topics (9 prod + 2 DLQ), 19 Iceberg tables, consent_audit non-expiring</td><td><a href="labs/lab-0-1-environment-provisioning.md">lab-0-1</a></td></tr>
+        <tr><td class="cp">CP-01</td><td>Setup</td><td>Bulk data loaded; FLOW-SIM oneshot success</td><td><a href="labs/lab-0-1-environment-provisioning.md">lab-0-1</a></td></tr>
+        <tr><td class="cp">CP-02</td><td>Module 1</td><td>NiFi/Kafka ingest healthy; planted Case 0 in stream; DLQ empty</td><td><a href="labs/lab-1-1-flow-sim.md">lab-1-1</a></td></tr>
+        <tr><td class="cp indigo">CP-02b</td><td>Module 1</td><td><strong>PyFlink CEP real-time detection</strong> — JOB-10 detects Case 0 (R-101 SPOOFING) p99 &lt; 800ms over 100 alerts</td><td><a href="labs/lab-1-4-flink-cep.md">lab-1-4</a></td></tr>
+        <tr><td class="cp">CP-03</td><td>Module 1</td><td>150K events/sec sustained 10 min; p99 latency &lt; 30s</td><td><a href="labs/lab-1-3-throughput-test.md">lab-1-3</a></td></tr>
+        <tr><td class="cp">CP-04</td><td>Module 1</td><td>All 6 Bronze tables populated; row count matches Kafka offset</td><td><a href="labs/lab-1-2-bronze-ingest.md">lab-1-2</a></td></tr>
+        <tr><td class="cp indigo">CP-04b</td><td>Module 1</td><td><strong>SSB SQL real-time detection</strong> — JOB-11 detects Case 2 (R-104 cross-product imbalance) within 60s of window close</td><td><a href="labs/lab-1-5-throughput-comparison.md">lab-1-5</a></td></tr>
+        <tr><td class="cp">CP-05</td><td>Module 2</td><td>Order-book reconstruction via Iceberg time-travel</td><td><a href="labs/lab-2-1-order-book-reconstruction.md">lab-2-1</a></td></tr>
+        <tr><td class="cp">CP-06</td><td>Module 2</td><td>5 fuzzy-match cases (10–14) merged into single entity_id</td><td><a href="labs/lab-2-2-fuzzy-match.md">lab-2-2</a></td></tr>
+        <tr><td class="cp">CP-07</td><td>Module 3</td><td>Per-member feature distribution matches expected category pattern</td><td><a href="labs/lab-3-1-temporal-features.md">lab-3-1</a></td></tr>
+        <tr><td class="cp">CP-08</td><td>Module 3</td><td>All 10 manipulation cases (0–9) surface as alert candidates</td><td><a href="labs/lab-3-2-alert-candidates.md">lab-3-2</a></td></tr>
+        <tr><td class="cp">CP-09</td><td>Module 3</td><td>Case 2 cross-product imbalance ≥ 7.0; R-104 fires CRITICAL</td><td><a href="labs/lab-3-3-cross-product.md">lab-3-3</a></td></tr>
+        <tr><td class="cp">CP-10</td><td>Module 4</td><td>7 governed views deployed; joins to masters succeed</td><td><a href="labs/lab-4-1-governed-views.md">lab-4-1</a></td></tr>
+        <tr><td class="cp">CP-11</td><td>Module 4</td><td>Ranger policies enforced; PAN masking + consent filter + DPO bypass</td><td><a href="labs/lab-4-2-ranger-policies.md">lab-4-2</a></td></tr>
+        <tr><td class="cp">CP-12</td><td>Module 5</td><td>≥ 50 Hyperopt runs in MLflow; search converges</td><td><a href="labs/lab-5-1-mlflow-training.md">lab-5-1</a></td></tr>
+        <tr><td class="cp">CP-13</td><td>Module 5</td><td>AUC ≥ 0.82; top-decile precision ≥ 0.55; planted-case separation</td><td><a href="labs/lab-5-2-performance.md">lab-5-2</a></td></tr>
+        <tr><td class="cp">CP-14</td><td>Module 5</td><td>Manual Production promotion; JOB-09 every 5 min; ≥ 90% scored</td><td><a href="labs/lab-5-3-production-scoring.md">lab-5-3</a></td></tr>
+        <tr><td class="cp">CP-15</td><td>Module 6</td><td>Milvus has ≥ 2000 chunks; retrieval returns PFUTP 4(2)(e) for layering</td><td><a href="labs/lab-6-1-vector-store.md">lab-6-1</a></td></tr>
+        <tr><td class="cp">CP-16</td><td>Module 6</td><td>5 STR drafts; valid JSON; no fabrication; correct citations</td><td><a href="labs/lab-6-2-str-generation.md">lab-6-2</a></td></tr>
+        <tr><td class="cp">CP-17</td><td>Module 7</td><td>6 Atlas tags applied; lineage Bronze→Gold visible</td><td><a href="labs/lab-7-1-atlas-classifications.md">lab-7-1</a></td></tr>
+        <tr><td class="cp">CP-18</td><td>Module 7</td><td>Cases 15–19 filtered for non-statutory; DPO bypass works</td><td><a href="labs/lab-7-2-consent-withdrawal.md">lab-7-2</a></td></tr>
+        <tr><td class="cp indigo">CP-19</td><td>Module 7</td><td><strong>COMPLIANCE GATE — DPDP §12 erasure provable; pre-snap returns row, current returns 0, audit preserved</strong></td><td><a href="labs/lab-7-3-erasure.md" class="indigo">lab-7-3</a></td></tr>
+        <tr><td class="cp">CP-20</td><td>Capstone</td><td>End-to-end integration: fresh case flows ingest → STR draft</td><td>Day 10 final exam</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Deficiency-to-checkpoint coverage</h3>
+    <table>
+      <thead><tr><th>Deficiency</th><th>Checkpoints that close it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>ARG-1</strong> Peak volume crisis</td><td class="cp">CP-02, CP-03, CP-04</td></tr>
+        <tr><td><strong>ARG-2</strong> Temporal feature gap</td><td class="cp">CP-05, CP-06, CP-07, CP-08, CP-09</td></tr>
+        <tr><td><strong>ARG-3</strong> 92% false-positive rate</td><td class="cp">CP-12, CP-13, CP-14</td></tr>
+        <tr><td><strong>ARG-4</strong> STR documentation backlog</td><td class="cp">CP-15, CP-16</td></tr>
+        <tr><td><strong>ARG-5</strong> No lineage / consent / erasure</td><td class="cp">CP-10, CP-11, CP-17, CP-18, <span class="indigo">CP-19</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="labs">
+  <div class="container">
+    <h2><span class="num">07</span>All 21 labs</h2>
+    <p class="lede">Each lab has explicit pass conditions, expected query outputs, and one common failure-mode write-up. Lab files live alongside the source in the repo. v1.2 added two real-time-detection labs (1-4 and 1-5) for the new PyFlink CEP and SSB SQL engines.</p>
+
+    <table class="labs-table">
+      <thead><tr><th>Lab</th><th>Module</th><th>Checkpoint</th><th>What it tests</th></tr></thead>
+      <tbody>
+        <tr><td><a href="labs/lab-0-1-environment-provisioning.md">lab-0-1-environment-provisioning</a></td><td>Setup</td><td class="cp">CP-00, CP-01</td><td class="pass-summary">Cluster up, topics created, tables created, sample data loaded</td></tr>
+        <tr><td><a href="labs/lab-1-1-flow-sim.md">lab-1-1-flow-sim</a></td><td>Module 1</td><td class="cp">CP-02</td><td class="pass-summary">FLOW-SIM oneshot bulk-load; Kafka traffic on 3 streaming topics</td></tr>
+        <tr><td><a href="labs/lab-1-2-bronze-ingest.md">lab-1-2-bronze-ingest</a></td><td>Module 1</td><td class="cp">CP-04</td><td class="pass-summary">NiFi flows + Spark JOB-01..04 deployed; Bronze populated</td></tr>
+        <tr><td><a href="labs/lab-1-3-throughput-test.md">lab-1-3-throughput-test</a></td><td>Module 1</td><td class="cp">CP-03</td><td class="pass-summary">150K events/sec sustained for 10 minutes; 3 engines running</td></tr>
+        <tr><td><a href="labs/lab-1-4-flink-cep.md" class="indigo">lab-1-4-flink-cep</a></td><td>Module 1</td><td class="cp indigo">CP-02b</td><td class="pass-summary"><strong>PyFlink CEP (JOB-10) detects Case 0 SPOOFING with p99 &lt; 800ms over 100 alerts</strong></td></tr>
+        <tr><td><a href="labs/lab-1-5-throughput-comparison.md" class="indigo">lab-1-5-throughput-comparison</a></td><td>Module 1</td><td class="cp indigo">CP-04b</td><td class="pass-summary"><strong>SSB SQL (JOB-11) detects Case 2 cross-product imbalance within 60s; 3-engine latency comparison</strong></td></tr>
+        <tr><td><a href="labs/lab-2-1-order-book-reconstruction.md">lab-2-1-order-book-reconstruction</a></td><td>Module 2</td><td class="cp">CP-05</td><td class="pass-summary">Iceberg time-travel reproduces book state at planted Case 0</td></tr>
+        <tr><td><a href="labs/lab-2-2-fuzzy-match.md">lab-2-2-fuzzy-match</a></td><td>Module 2</td><td class="cp">CP-06</td><td class="pass-summary">5 fuzzy cases (10–14) resolved into 5 canonical entity_ids</td></tr>
+        <tr><td><a href="labs/lab-3-1-temporal-features.md">lab-3-1-temporal-features</a></td><td>Module 3</td><td class="cp">CP-07</td><td class="pass-summary">Member-category cancel-rate distribution matches expected pattern</td></tr>
+        <tr><td><a href="labs/lab-3-2-alert-candidates.md">lab-3-2-alert-candidates</a></td><td>Module 3</td><td class="cp">CP-08</td><td class="pass-summary">All 10 manipulation cases (0–9) produce ≥ 1 alert each</td></tr>
+        <tr><td><a href="labs/lab-3-3-cross-product.md">lab-3-3-cross-product</a></td><td>Module 3</td><td class="cp">CP-09</td><td class="pass-summary">Case 2 imbalance ≥ 7.0; R-104 CRITICAL fires</td></tr>
+        <tr><td><a href="labs/lab-4-1-governed-views.md">lab-4-1-governed-views</a></td><td>Module 4</td><td class="cp">CP-10</td><td class="pass-summary">7 views in argus_${STUDENT_ID}_views; joins to masters succeed</td></tr>
+        <tr><td><a href="labs/lab-4-2-ranger-policies.md">lab-4-2-ranger-policies</a></td><td>Module 4</td><td class="cp">CP-11</td><td class="pass-summary">Role-based PAN masking + consent filter + DPO bypass</td></tr>
+        <tr><td><a href="labs/lab-5-1-mlflow-training.md">lab-5-1-mlflow-training</a></td><td>Module 5</td><td class="cp">CP-12</td><td class="pass-summary">50+ Hyperopt runs logged to MLflow with convergence</td></tr>
+        <tr><td><a href="labs/lab-5-2-performance.md">lab-5-2-performance</a></td><td>Module 5</td><td class="cp">CP-13</td><td class="pass-summary">AUC ≥ 0.82; top-decile precision ≥ 0.55; planted-case separation</td></tr>
+        <tr><td><a href="labs/lab-5-3-production-scoring.md">lab-5-3-production-scoring</a></td><td>Module 5</td><td class="cp">CP-14</td><td class="pass-summary">Manual Production promotion; JOB-09 every 5 min; SHAP written</td></tr>
+        <tr><td><a href="labs/lab-6-1-vector-store.md">lab-6-1-vector-store</a></td><td>Module 6</td><td class="cp">CP-15</td><td class="pass-summary">Milvus retrieval returns PFUTP 4(2)(e) for layering query</td></tr>
+        <tr><td><a href="labs/lab-6-2-str-generation.md">lab-6-2-str-generation</a></td><td>Module 6</td><td class="cp">CP-16</td><td class="pass-summary">5 valid JSON drafts; no fabrication; constraint compliance</td></tr>
+        <tr><td><a href="labs/lab-7-1-atlas-classifications.md">lab-7-1-atlas-classifications</a></td><td>Module 7</td><td class="cp">CP-17</td><td class="pass-summary">6 Atlas tags applied; Bronze→Gold lineage visible</td></tr>
+        <tr><td><a href="labs/lab-7-2-consent-withdrawal.md">lab-7-2-consent-withdrawal</a></td><td>Module 7</td><td class="cp">CP-18</td><td class="pass-summary">Cases 15–19 filtered for non-statutory; DPO bypass via vw_surveillance_audit</td></tr>
+        <tr><td><a href="labs/lab-7-3-erasure.md" class="indigo">lab-7-3-erasure</a></td><td>Module 7</td><td class="cp indigo">CP-19</td><td class="pass-summary"><strong>COMPLIANCE GATE — DPDP §12 erasure with Iceberg time-travel proof</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="repo">
+  <div class="container">
+    <h2><span class="num">08</span>Repository</h2>
+    <p class="lede">All deliverables live in a single GitHub repo. The source code, SQL DDL, NiFi flows, governance scripts, lab guides, and PRD are the canonical artefact; this HTML page is a secondary view rendered from the same content.</p>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="label">CODE  ·  SRC/</div>
+        <h4>Source code</h4>
+        <p><a href="src/ingest/">src/ingest/</a> — FLOW-SIM, JOB-01..04, NiFi flow exports<br>
+        <a href="src/transform/">src/transform/</a> — JOB-05..08<br>
+        <a href="src/ml/">src/ml/</a> — XGBoost ranker + GenAI engine<br>
+        <a href="src/governance/">src/governance/</a> — Atlas + DPDP workflows</p>
+      </div>
+      <div class="card">
+        <div class="label">SQL  ·  DDL + POLICIES</div>
+        <h4>Schema + access</h4>
+        <p><a href="sql/bronze_ddl.sql">bronze_ddl.sql</a> · <a href="sql/silver_ddl.sql">silver_ddl.sql</a> · <a href="sql/gold_ddl.sql">gold_ddl.sql</a><br>
+        <a href="sql/governed_views.sql">governed_views.sql</a><br>
+        <a href="sql/ranger_policies.sql">ranger_policies.sql</a></p>
+      </div>
+      <div class="card">
+        <div class="label">DATA  ·  SYNTHETIC</div>
+        <h4>Generator + corpus</h4>
+        <p><a href="data/generate_data.py">data/generate_data.py</a> — 23 planted test cases<br>
+        Reproducible with <code>--seed 42</code><br>
+        Lab corpus: regulations + 200 exemplars + ESM/ASM rules</p>
+      </div>
+      <div class="card">
+        <div class="label">DOCS  ·  CANONICAL</div>
+        <h4>Module write-ups</h4>
+        <p><a href="docs/00_scenario.md">00_scenario.md</a><br>
+        <a href="docs/01_architecture.md">01_architecture.md</a><br>
+        <a href="docs/02_data_sources.md">02_data_sources.md</a><br>
+        <a href="docs/schedule.md">schedule.md</a> · <a href="docs/assessment.md">assessment.md</a></p>
+      </div>
+      <div class="card">
+        <div class="label">PRD  ·  v1.0-spring2026</div>
+        <h4>Product requirements</h4>
+        <p>The locked design specification — every architectural choice, every PRD constraint, every checkpoint pass condition. <a href="ARG_prd_v1.md">ARG_prd_v1.md</a></p>
+      </div>
+      <div class="card">
+        <div class="label">LICENSE  ·  APACHE 2.0</div>
+        <h4>Open source</h4>
+        <p>Apache 2.0 — fork, adapt, run for your own training cohort. Customer name, regulator references, and synthetic data are configurable per <a href="ARG_prd_v1.md">PRD §11</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="container">
+    <p><span class="codename-foot">PROJECT ARGUS</span>  ·  Cloudera Data Platform Surveillance Capstone  ·  v1.0-spring2026</p>
+    <p>Apache 2.0  ·  <a href="https://github.com/cloudera-training/argus-capstone">github.com/cloudera-training/argus-capstone</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

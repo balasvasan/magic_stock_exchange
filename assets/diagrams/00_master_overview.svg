@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f1117"/>
+      <stop offset="100%" stop-color="#161b27"/>
+    </linearGradient>
+    <pattern id="dotsBg" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/>
+    </pattern>
+    <linearGradient id="ingestZone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f96302" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#f96302" stop-opacity="0.08"/>
+    </linearGradient>
+    <linearGradient id="processZone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f96302" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#f96302" stop-opacity="0.06"/>
+    </linearGradient>
+    <linearGradient id="serveZone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#f96302" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#f96302" stop-opacity="0.04"/>
+    </linearGradient>
+    <linearGradient id="governZone" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.32"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0.10"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1400" height="760" fill="url(#bg)"/>
+  <rect width="1400" height="760" fill="url(#dotsBg)"/>
+
+  <!-- Header -->
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">PROJECT ARGUS — 10-DAY TIMELINE</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">FROM PROVISIONING TO COMPLIANCE GATE — ALL 5 DEFICIENCIES CLOSED</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Day axis -->
+  <g transform="translate(120, 120)">
+    <text x="0" y="-8" font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2">DAY</text>
+    <g font-size="13" font-weight="600" fill="#e5e7eb" text-anchor="middle">
+      <text x="60" y="10">1</text>
+      <text x="180" y="10">2</text>
+      <text x="300" y="10">3</text>
+      <text x="420" y="10">4</text>
+      <text x="540" y="10">5</text>
+      <text x="660" y="10">6</text>
+      <text x="780" y="10">7</text>
+      <text x="900" y="10">8</text>
+      <text x="1020" y="10">9</text>
+      <text x="1140" y="10">10</text>
+    </g>
+    <!-- gridlines -->
+    <g stroke="#1e2535" stroke-width="1">
+      <line x1="0" y1="20" x2="1200" y2="20"/>
+      <line x1="0" y1="20" x2="0" y2="540" stroke-opacity="0.5"/>
+      <line x1="120" y1="20" x2="120" y2="540" stroke-opacity="0.5"/>
+      <line x1="240" y1="20" x2="240" y2="540" stroke-opacity="0.5"/>
+      <line x1="360" y1="20" x2="360" y2="540" stroke-opacity="0.5"/>
+      <line x1="480" y1="20" x2="480" y2="540" stroke-opacity="0.5"/>
+      <line x1="600" y1="20" x2="600" y2="540" stroke-opacity="0.5"/>
+      <line x1="720" y1="20" x2="720" y2="540" stroke-opacity="0.5"/>
+      <line x1="840" y1="20" x2="840" y2="540" stroke-opacity="0.5"/>
+      <line x1="960" y1="20" x2="960" y2="540" stroke-opacity="0.5"/>
+      <line x1="1080" y1="20" x2="1080" y2="540" stroke-opacity="0.5"/>
+      <line x1="1200" y1="20" x2="1200" y2="540" stroke-opacity="0.5"/>
+    </g>
+
+    <!-- Module Phase Bars (Gantt-style) -->
+    <!-- Day 1 — Setup -->
+    <g transform="translate(0, 40)">
+      <rect width="120" height="40" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#9ca3af" text-anchor="middle" font-weight="700" letter-spacing="1">SETUP</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">Day 1 Provisioning</text>
+    </g>
+
+    <!-- Module 1 — CDF + Flink + SSB (3.5 days) -->
+    <g transform="translate(120, 40)">
+      <rect width="420" height="40" rx="6" fill="url(#ingestZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="210" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">MODULE 1 — CDF + FLINK + SSB</text>
+      <text x="210" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">NiFi · Spark · PyFlink CEP · SSB SQL · 150K ev/s · &lt;800ms p99</text>
+    </g>
+
+    <!-- Module 2 — CDE Identity (1.5 days, starts Day 4 PM = x=540) -->
+    <g transform="translate(540, 90)">
+      <rect width="180" height="40" rx="6" fill="url(#processZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="90" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">MODULE 2 — IDENTITY + BOOK</text>
+      <text x="90" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">SCD2 · Fuzzy · Time-travel</text>
+    </g>
+
+    <!-- Module 3 — CDE Features (Day 6 = x=600 unchanged) -->
+    <g transform="translate(600, 140)">
+      <rect width="120" height="40" rx="6" fill="url(#processZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">M3 — FEATURES</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">5 rules · 60 features</text>
+    </g>
+
+    <!-- Module 4 — CDW -->
+    <g transform="translate(600, 190)">
+      <rect width="120" height="40" rx="6" fill="url(#serveZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">M4 — GOVERNED VIEWS</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">Impala · Ranger × 3 roles</text>
+    </g>
+
+    <!-- Module 5 — CML -->
+    <g transform="translate(720, 240)">
+      <rect width="120" height="40" rx="6" fill="url(#serveZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">M5 — ML</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">XGBoost · MLflow · AUC ≥ 0.82</text>
+    </g>
+
+    <!-- Module 6 — GenAI -->
+    <g transform="translate(840, 290)">
+      <rect width="120" height="40" rx="6" fill="url(#serveZone)" stroke="#f96302" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#f96302" text-anchor="middle" font-weight="700" letter-spacing="1">M6 — GENAI / RAG</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">Llama + Milvus · STR drafts</text>
+    </g>
+
+    <!-- Module 7 — SDX (special: indigo) -->
+    <g transform="translate(960, 340)">
+      <rect width="120" height="40" rx="6" fill="url(#governZone)" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#6366f1" text-anchor="middle" font-weight="700" letter-spacing="1">M7 — SDX</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">Atlas · Ranger · DPDP</text>
+    </g>
+
+    <!-- Day 10 — Capstone -->
+    <g transform="translate(1080, 390)">
+      <rect width="120" height="40" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="60" y="18" font-size="10" fill="#9ca3af" text-anchor="middle" font-weight="700" letter-spacing="1">CAPSTONE</text>
+      <text x="60" y="32" font-size="11" fill="#e5e7eb" text-anchor="middle">End-to-end test</text>
+    </g>
+
+    <!-- Checkpoint markers (CP-00..CP-20) along bottom of bars -->
+    <text x="-20" y="465" font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2" text-anchor="end">CP</text>
+
+    <g font-size="10" font-family="ui-monospace" font-weight="600" text-anchor="middle">
+      <!-- CP-00, CP-01 — Day 1 -->
+      <g transform="translate(60, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">00</text>
+      </g>
+      <g transform="translate(85, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">01</text>
+      </g>
+      <!-- CP-02..04 — Day 2-3 (with v1.2 sub-checkpoints CP-02b + CP-04b) -->
+      <g transform="translate(180, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">02</text>
+      </g>
+      <g transform="translate(210, 478)">
+        <circle r="10" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+        <text fill="#6366f1" font-size="8" y="3">02b</text>
+      </g>
+      <g transform="translate(240, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">03</text>
+      </g>
+      <g transform="translate(280, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">04</text>
+      </g>
+      <g transform="translate(310, 478)">
+        <circle r="10" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+        <text fill="#6366f1" font-size="8" y="3">04b</text>
+      </g>
+      <!-- CP-05..06 — Day 4 -->
+      <g transform="translate(400, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">05</text>
+      </g>
+      <g transform="translate(440, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">06</text>
+      </g>
+      <!-- CP-07..09 — Day 5 -->
+      <g transform="translate(510, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">07</text>
+      </g>
+      <g transform="translate(540, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">08</text>
+      </g>
+      <g transform="translate(570, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">09</text>
+      </g>
+      <!-- CP-10..11 — Day 6 -->
+      <g transform="translate(640, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">10</text>
+      </g>
+      <g transform="translate(680, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">11</text>
+      </g>
+      <!-- CP-12..14 — Day 7 -->
+      <g transform="translate(750, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">12</text>
+      </g>
+      <g transform="translate(780, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">13</text>
+      </g>
+      <g transform="translate(810, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">14</text>
+      </g>
+      <!-- CP-15..16 — Day 8 -->
+      <g transform="translate(880, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">15</text>
+      </g>
+      <g transform="translate(920, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">16</text>
+      </g>
+      <!-- CP-17, CP-18 (orange) and CP-19 (indigo, COMPLIANCE GATE) — Day 9 -->
+      <g transform="translate(990, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">17</text>
+      </g>
+      <g transform="translate(1020, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">18</text>
+      </g>
+      <g transform="translate(1056, 460)">
+        <circle r="17" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+        <text fill="#fff" y="4">19</text>
+      </g>
+      <text x="1056" y="490" font-size="9" fill="#6366f1" font-weight="700" letter-spacing="1">⚠ GATE</text>
+      <!-- CP-20 — Day 10 -->
+      <g transform="translate(1140, 460)">
+        <circle r="13" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+        <text fill="#f96302" y="3.5">20</text>
+      </g>
+    </g>
+
+    <!-- Deficiency closure track -->
+    <text x="-20" y="555" font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2" text-anchor="end">DEF</text>
+
+    <g font-size="10" font-family="ui-monospace" fill="#e5e7eb">
+      <!-- ARG-1 closes Day 3 -->
+      <g transform="translate(0, 540)">
+        <line x1="0" y1="10" x2="300" y2="10" stroke="#f96302" stroke-width="2" stroke-opacity="0.5"/>
+        <rect x="280" y="0" width="50" height="20" rx="3" fill="#f96302"/>
+        <text x="305" y="13.5" text-anchor="middle" fill="#fff" font-weight="700">ARG-1</text>
+      </g>
+      <!-- ARG-2 closes Day 5 -->
+      <g transform="translate(0, 565)">
+        <line x1="0" y1="10" x2="540" y2="10" stroke="#f96302" stroke-width="2" stroke-opacity="0.5"/>
+        <rect x="520" y="0" width="50" height="20" rx="3" fill="#f96302"/>
+        <text x="545" y="13.5" text-anchor="middle" fill="#fff" font-weight="700">ARG-2</text>
+      </g>
+      <!-- ARG-3 closes Day 7 -->
+      <g transform="translate(0, 590)">
+        <line x1="0" y1="10" x2="780" y2="10" stroke="#f96302" stroke-width="2" stroke-opacity="0.5"/>
+        <rect x="760" y="0" width="50" height="20" rx="3" fill="#f96302"/>
+        <text x="785" y="13.5" text-anchor="middle" fill="#fff" font-weight="700">ARG-3</text>
+      </g>
+      <!-- ARG-4 closes Day 8 -->
+      <g transform="translate(0, 615)">
+        <line x1="0" y1="10" x2="900" y2="10" stroke="#f96302" stroke-width="2" stroke-opacity="0.5"/>
+        <rect x="880" y="0" width="50" height="20" rx="3" fill="#f96302"/>
+        <text x="905" y="13.5" text-anchor="middle" fill="#fff" font-weight="700">ARG-4</text>
+      </g>
+      <!-- ARG-5 closes Day 9 -->
+      <g transform="translate(0, 640)">
+        <line x1="0" y1="10" x2="1056" y2="10" stroke="#6366f1" stroke-width="2.5"/>
+        <rect x="1036" y="0" width="60" height="20" rx="3" fill="#6366f1"/>
+        <text x="1066" y="13.5" text-anchor="middle" fill="#fff" font-weight="700">ARG-5</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(60, 700)" font-size="11" font-family="ui-monospace">
+    <text font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2">LEGEND</text>
+    <g transform="translate(0, 18)">
+      <circle cx="6" cy="6" r="6" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+      <text x="20" y="10" fill="#9ca3af">Standard checkpoint</text>
+    </g>
+    <g transform="translate(170, 18)">
+      <circle cx="6" cy="6" r="7" fill="#6366f1"/>
+      <text x="22" y="10" fill="#9ca3af">CP-19 — COMPLIANCE GATE (DPDP §12 erasure, non-negotiable)</text>
+    </g>
+    <g transform="translate(660, 18)">
+      <rect x="0" y="2" width="14" height="10" fill="#f96302" fill-opacity="0.30" stroke="#f96302" stroke-width="1"/>
+      <text x="22" y="10" fill="#9ca3af">CDP layer activation (Ingest / Process / Serve)</text>
+    </g>
+    <g transform="translate(1080, 18)">
+      <rect x="0" y="2" width="14" height="10" fill="#6366f1" fill-opacity="0.30" stroke="#6366f1" stroke-width="1"/>
+      <text x="22" y="10" fill="#9ca3af">Govern (SDX)</text>
+    </g>
+  </g>
+</svg>

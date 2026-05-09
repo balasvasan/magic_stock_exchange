@@ -1,0 +1,91 @@
+{
+  "flow": {
+    "id": "flow_04_external_feeds",
+    "name": "ARGUS — External Feeds Landing (FLOW-04)",
+    "version": "1.0",
+    "description": "Three external feeds consolidated into a single NiFi flow with three parallel branches. (1) SEBI SI Portal SFTP poll for regulatory action notifications. (2) Vendor BBO Kafka mirror (Refinitiv-equivalent) for cross-exchange best-bid/best-offer. (3) News wire REST API poll for corporate disclosures + headlines.",
+    "comment": "Reference stub. Production XML in s3://argus-training-assets/argus-capstone/v1.0/nifi_flows/.",
+    "processors": [
+      {
+        "id": "sebi_sftp",
+        "name": "ListSFTP_SEBIPortal",
+        "type": "org.apache.nifi.processors.standard.ListSFTP",
+        "config": {
+          "hostname": "siportal.sebi.gov.in",
+          "port": "22",
+          "username": "${SEBI_PORTAL_USER}",
+          "private_key_path": "${SEBI_PORTAL_KEY}",
+          "remote_path": "/argus/incoming/",
+          "polling_interval": "60 sec",
+          "comment": "SEBI publishes a new file ~hourly on this endpoint with regulatory action deltas."
+        }
+      },
+      {
+        "id": "sebi_fetch",
+        "name": "FetchSFTP_SEBIPortal",
+        "type": "org.apache.nifi.processors.standard.FetchSFTP",
+        "config": {"completion_strategy": "Move File"}
+      },
+      {
+        "id": "sebi_publish",
+        "name": "PublishKafka_RegulatorFeed",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.regulator.feed.v1",
+          "key_attribute": "action_type"
+        }
+      },
+      {
+        "id": "bbo_consume",
+        "name": "ConsumeKafka_BBOVendor",
+        "type": "org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${BBO_VENDOR_BROKERS}",
+          "topic_name": "vendor.bbo.nse,vendor.bbo.bse",
+          "group_id": "argus.bronze.bbo",
+          "auto_offset_reset": "latest",
+          "concurrent_tasks": 4,
+          "comment": "BBO is high-volume but stale ticks have no value — start from latest."
+        }
+      },
+      {
+        "id": "bbo_publish",
+        "name": "PublishKafka_BBO",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.bbo.v1",
+          "key_attribute": "instrument_code"
+        }
+      },
+      {
+        "id": "news_invoke",
+        "name": "InvokeHTTP_NewsWire",
+        "type": "org.apache.nifi.processors.standard.InvokeHTTP",
+        "config": {
+          "http_method": "GET",
+          "remote_url": "${NEWS_WIRE_URL}/api/v1/headlines?since=${last.poll.ts}",
+          "polling_interval": "30 sec",
+          "auth_header": "Bearer ${NEWS_WIRE_TOKEN}"
+        }
+      },
+      {
+        "id": "news_publish",
+        "name": "PublishKafka_News",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.news.v1",
+          "key_attribute": "instrument_code"
+        }
+      }
+    ],
+    "connections": [
+      {"from": "sebi_sftp", "to": "sebi_fetch", "relationship": "success"},
+      {"from": "sebi_fetch", "to": "sebi_publish", "relationship": "success"},
+      {"from": "bbo_consume", "to": "bbo_publish", "relationship": "success"},
+      {"from": "news_invoke", "to": "news_publish", "relationship": "Response"}
+    ]
+  }
+}

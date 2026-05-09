@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 820" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+    <marker id="arInd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/></marker>
+  </defs>
+  <rect width="1400" height="820" fill="url(#bg)"/>
+  <rect width="1400" height="820" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 1 — CDF + FLINK + SSB STREAMING + REAL-TIME DETECTION</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAYS 2-4 (3.5 DAYS) · CLOSES ARG-1 · CP-02 / CP-02b / CP-03 / CP-04 / CP-04b</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Lane headers -->
+  <g transform="translate(60, 110)" font-size="10" font-weight="700" letter-spacing="2" text-anchor="middle">
+    <text x="100"  y="0" fill="#9ca3af">SOURCES</text>
+    <text x="370"  y="0" fill="#f96302">NIFI FLOWS (CDF)</text>
+    <text x="640"  y="0" fill="#f96302">KAFKA TOPICS</text>
+    <text x="950"  y="0" fill="#f96302">PROCESSING ENGINES</text>
+    <text x="1280" y="0" fill="#f96302">SINKS (ICEBERG)</text>
+  </g>
+  <line x1="60" y1="120" x2="1340" y2="120" stroke="#374151" stroke-width="1" stroke-dasharray="3 4" opacity="0.5"/>
+
+  <!-- ============== Sources ============== -->
+  <g transform="translate(60, 150)">
+    <rect width="200" height="380" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#9ca3af" font-weight="700">5 SOURCE SYSTEMS</text>
+
+    <text x="14" y="50" font-size="10.5" fill="#e5e7eb">• TARANG match engine</text>
+    <text x="22" y="64" font-size="10" fill="#6b7280">3.5B/d · 150K/s peak</text>
+
+    <text x="14" y="92" font-size="10.5" fill="#e5e7eb">• NIPATAN clearing</text>
+    <text x="22" y="106" font-size="10" fill="#6b7280">280M/d trades</text>
+
+    <text x="14" y="134" font-size="10.5" fill="#e5e7eb">• KAVACH KYC + members</text>
+    <text x="22" y="148" font-size="10" fill="#6b7280">Hourly Debezium CDC</text>
+
+    <text x="14" y="176" font-size="10.5" fill="#e5e7eb">• PRATEEK reference</text>
+    <text x="22" y="190" font-size="10" fill="#6b7280">Instruments + ESM/ASM</text>
+
+    <text x="14" y="218" font-size="10.5" fill="#e5e7eb">• External: BBO+SEBI+News</text>
+
+    <text x="14" y="270" font-size="10" fill="#9ca3af" font-style="italic">PII-bearing only:</text>
+    <text x="14" y="285" font-size="10.5" fill="#6366f1">→ KAVACH</text>
+
+    <text x="14" y="320" font-size="10" fill="#9ca3af" font-style="italic">Volume-critical only:</text>
+    <text x="14" y="335" font-size="10.5" fill="#f96302">→ TARANG (orders)</text>
+    <text x="14" y="350" font-size="10.5" fill="#f96302">→ NIPATAN (trades)</text>
+  </g>
+
+  <!-- arrow Sources → NiFi -->
+  <line x1="260" y1="340" x2="295" y2="340" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ============== NiFi flows ============== -->
+  <g transform="translate(295, 150)">
+    <rect width="200" height="380" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700">4 NIFI FLOWS</text>
+    <text x="14" y="40" font-size="10" fill="#9ca3af">Schema validation · DLQ</text>
+
+    <g font-size="10.5">
+      <text x="14" y="68" fill="#e5e7eb">flow_01_orders</text>
+      <text x="14" y="82" fill="#9ca3af">  multicast tap → Kafka</text>
+
+      <text x="14" y="118" fill="#e5e7eb">flow_02_trades</text>
+      <text x="14" y="132" fill="#9ca3af">  re-key by instrument</text>
+
+      <text x="14" y="168" fill="#e5e7eb">flow_03_kavach_cdc</text>
+      <text x="14" y="182" fill="#9ca3af">  Atlas: PII_HIGH attribution</text>
+      <text x="14" y="196" fill="#9ca3af">  TLS · no disk spill</text>
+
+      <text x="14" y="232" fill="#e5e7eb">flow_04_external_feeds</text>
+      <text x="14" y="246" fill="#9ca3af">  multi-source merge</text>
+    </g>
+
+    <text x="14" y="290" font-size="10" fill="#9ca3af" font-style="italic">Schema-fail routing:</text>
+    <text x="14" y="306" font-size="10.5" fill="#ef4444">→ orders.dlq</text>
+    <text x="14" y="320" font-size="10.5" fill="#ef4444">→ trades.dlq</text>
+
+    <text x="14" y="358" font-size="10" fill="#6b7280">9 production + 2 DLQ topics</text>
+  </g>
+
+  <!-- arrow NiFi → Kafka -->
+  <line x1="495" y1="340" x2="530" y2="340" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ============== Kafka topics ============== -->
+  <g transform="translate(530, 150)">
+    <rect width="220" height="380" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700">9 PROD TOPICS · 2 DLQ</text>
+    <text x="14" y="40" font-size="10" fill="#9ca3af">126 partitions total</text>
+
+    <g font-size="10.5">
+      <text x="14" y="70" fill="#e5e7eb">orders.v1 (48p)</text>
+      <text x="14" y="86" fill="#e5e7eb">trades.v1 (24p)</text>
+      <text x="14" y="102" fill="#e5e7eb">bbo.v1 (12p)</text>
+      <text x="14" y="118" fill="#e5e7eb">member.cdc.v1 (6p compact)</text>
+      <text x="14" y="134" fill="#e5e7eb">instrument.cdc.v1 (3p)</text>
+      <text x="14" y="150" fill="#e5e7eb">surveillance.state.v1 (6p)</text>
+      <text x="14" y="166" fill="#e5e7eb">regulator.feed.v1 (3p)</text>
+      <text x="14" y="182" fill="#e5e7eb">news.v1 (6p)</text>
+    </g>
+
+    <line x1="14" y1="200" x2="206" y2="200" stroke="#6366f1" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="14" y="218" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="1">NEW IN v1.2:</text>
+    <text x="14" y="234" font-size="10.5" fill="#6366f1">realtime_alerts.v1 (12p)</text>
+    <text x="14" y="248" font-size="10" fill="#9ca3af">Written by JOB-10 + JOB-11</text>
+
+    <line x1="14" y1="266" x2="206" y2="266" stroke="#ef4444" stroke-width="1" stroke-dasharray="2 2"/>
+    <text x="14" y="284" font-size="10" fill="#ef4444" font-weight="700" letter-spacing="1">DLQ:</text>
+    <text x="14" y="300" font-size="10.5" fill="#ef4444">orders.dlq (3p)</text>
+    <text x="14" y="316" font-size="10.5" fill="#ef4444">trades.dlq (3p)</text>
+
+    <text x="14" y="358" font-size="10" fill="#9ca3af" font-style="italic">argus.${SID}.* per-student</text>
+  </g>
+
+  <!-- ============== Processing engines (3 lanes) ============== -->
+  <g transform="translate(770, 150)">
+    <rect width="320" height="380" rx="6" fill="#0f1117" stroke="#374151" stroke-width="1"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700">3 STREAMING ENGINES</text>
+
+    <!-- Engine 1: Spark (existing) -->
+    <g transform="translate(8, 40)">
+      <rect width="304" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="10" y="20" font-size="10" fill="#f96302" font-weight="700" letter-spacing="1">[1] CDE / SPARK STRUCTURED STREAMING</text>
+      <text x="10" y="38" font-size="11" fill="#e5e7eb">JOB-01..04: Bronze ingest</text>
+      <text x="10" y="54" font-size="10.5" fill="#9ca3af">Trigger: 10s · MOR Iceberg · ~50 lines/job</text>
+      <text x="10" y="70" font-size="10.5" fill="#9ca3af">Owns: canonical persistence</text>
+      <text x="10" y="86" font-size="10" fill="#6b7280">JOB-12: realtime_alerts → Iceberg ~50 lines</text>
+    </g>
+
+    <!-- Engine 2: PyFlink CEP (NEW, indigo) -->
+    <g transform="translate(8, 150)">
+      <rect width="304" height="100" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+      <text x="10" y="20" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="1">[2] CSA / PYFLINK CEP — NEW</text>
+      <text x="10" y="38" font-size="11" fill="#e5e7eb">JOB-10: real-time R-101 + R-102</text>
+      <text x="10" y="54" font-size="10.5" fill="#9ca3af">Trigger: event-driven · ~180 lines</text>
+      <text x="10" y="70" font-size="10.5" fill="#9ca3af">Owns: sub-second pattern detection</text>
+      <text x="10" y="86" font-size="10" fill="#6366f1">Latency: p99 &lt; 800ms (CP-02b)</text>
+    </g>
+
+    <!-- Engine 3: SSB SQL (NEW, indigo) -->
+    <g transform="translate(8, 260)">
+      <rect width="304" height="100" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+      <text x="10" y="20" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="1">[3] SQL STREAM BUILDER — NEW</text>
+      <text x="10" y="38" font-size="11" fill="#e5e7eb">JOB-11: real-time R-104 (Jane St.)</text>
+      <text x="10" y="54" font-size="10.5" fill="#9ca3af">Declarative SQL · ~80 lines</text>
+      <text x="10" y="70" font-size="10.5" fill="#9ca3af">Owns: analyst-driven streaming</text>
+      <text x="10" y="86" font-size="10" fill="#6366f1">Deployed via SSB UI · no engineering</text>
+    </g>
+  </g>
+
+  <!-- arrow Kafka → engines -->
+  <line x1="750" y1="340" x2="770" y2="340" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ============== Sinks ============== -->
+  <g transform="translate(1110, 150)">
+    <rect width="230" height="380" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700">ICEBERG SINKS</text>
+
+    <!-- 6 Bronze tables -->
+    <g transform="translate(8, 40)">
+      <rect width="214" height="160" rx="4" fill="#0f1117" stroke="#9ca3af" stroke-width="1"/>
+      <text x="10" y="18" font-size="10" fill="#9ca3af" font-weight="700">argus_${SID}_bronze (6)</text>
+      <g font-size="10" fill="#e5e7eb">
+        <text x="10" y="38">orders_raw</text>
+        <text x="10" y="56">trades_raw</text>
+        <text x="10" y="74">member_cdc <tspan fill="#6366f1">PII_HIGH</tspan></text>
+        <text x="10" y="92">instrument_cdc</text>
+        <text x="10" y="110">external_feeds</text>
+        <text x="10" y="128">legacy_alerts (batch)</text>
+      </g>
+      <text x="10" y="150" font-size="9" fill="#6b7280">MOR · ORC · ingest_date partition</text>
+    </g>
+
+    <!-- realtime_alert_stream (NEW) -->
+    <g transform="translate(8, 210)">
+      <rect width="214" height="80" rx="4" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+      <text x="10" y="18" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="1">argus_${SID}_gold — NEW</text>
+      <text x="10" y="38" font-size="11" fill="#e5e7eb">realtime_alert_stream</text>
+      <text x="10" y="54" font-size="10" fill="#9ca3af">source_engine: FLINK | SSB</text>
+      <text x="10" y="70" font-size="9" fill="#6b7280">COW · Parquet · fired_date</text>
+    </g>
+
+    <!-- Operational note -->
+    <g transform="translate(8, 300)">
+      <text x="0" y="14" font-size="10" fill="#6b7280" font-style="italic">All sinks per-student namespaced.</text>
+      <text x="0" y="30" font-size="10" fill="#6b7280" font-style="italic">JOB-12 persists from</text>
+      <text x="0" y="44" font-size="10" fill="#6b7280" font-style="italic">realtime_alerts.v1 → Iceberg.</text>
+    </g>
+  </g>
+
+  <!-- arrow Engines → Sinks -->
+  <line x1="1090" y1="340" x2="1110" y2="340" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- ============== Latency comparison block ============== -->
+  <g transform="translate(60, 560)">
+    <rect width="1280" height="100" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+    <text x="20" y="28" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">LATENCY COMPARISON — SAME PATTERNS, DIFFERENT ENGINES (LAB 1.5)</text>
+
+    <g font-size="10.5">
+      <g transform="translate(20, 50)">
+        <rect width="200" height="36" rx="4" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+        <text x="10" y="14" fill="#f96302" font-weight="700">JOB-08 — Spark batch</text>
+        <text x="10" y="28" fill="#e5e7eb">~30 min (Module 3)</text>
+      </g>
+
+      <g transform="translate(240, 50)">
+        <rect width="200" height="36" rx="4" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+        <text x="10" y="14" fill="#6366f1" font-weight="700">JOB-10 — PyFlink CEP</text>
+        <text x="10" y="28" fill="#e5e7eb">&lt; 800ms p99</text>
+      </g>
+
+      <g transform="translate(460, 50)">
+        <rect width="200" height="36" rx="4" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+        <text x="10" y="14" fill="#6366f1" font-weight="700">JOB-11 — SSB SQL</text>
+        <text x="10" y="28" fill="#e5e7eb">~30s (60s window)</text>
+      </g>
+
+      <g transform="translate(700, 50)">
+        <text fill="#9ca3af">Same R-101/R-102/R-104 patterns. Same source events.</text>
+        <text y="16" fill="#9ca3af">Different latencies, different audit-defensibility.</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ============== When to use which (bottom) ============== -->
+  <g transform="translate(60, 690)">
+    <rect width="1280" height="110" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="20" y="28" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2">WHEN TO USE WHICH ENGINE</text>
+    <text x="20" y="52" font-size="11" fill="#e5e7eb">Spark batch (JOB-08): canonical record for ML scoring + legal proof. Replay-able from Iceberg snapshots. 30-min latency acceptable when you need full historical context.</text>
+    <text x="20" y="72" font-size="11" fill="#e5e7eb">PyFlink CEP (JOB-10): analyst notification + circuit-breaker triggers. Sub-second matters when intervention is still possible. Engineered, code-reviewed.</text>
+    <text x="20" y="92" font-size="11" fill="#e5e7eb">SSB SQL (JOB-11): analyst-driven iteration. Surveillance team writes patterns themselves. No engineering bottleneck. Trade-off: SQL window semantics → ~30s latency.</text>
+  </g>
+</svg>

@@ -1,0 +1,94 @@
+{
+  "_comment": "ARGUS — Atlas classification definitions. PRD §10 LOCKED — 6 tags. Applied via apply_atlas_tags.py to columns across argus_bronze, argus_silver, argus_gold.",
+  "_prd_reference": "PRD §10 — Compliance, Atlas classification tags",
+  "_version": "1.0",
+
+  "classifications": [
+    {
+      "name": "PII_HIGH",
+      "description": "Highly sensitive personal data of Indian data principals under DPDP Act 2023 §16. Strictest masking; column-level Ranger redaction for non-DPO roles.",
+      "attributes": [
+        { "name": "regulation",          "value": "DPDP Act 2023 §16" },
+        { "name": "masking_strategy",    "value": "ranger_column_mask" },
+        { "name": "retention_days",      "value": "8 * 365" },
+        { "name": "erasure_supported",   "value": "true" }
+      ],
+      "applied_to": [
+        { "schema": "argus_bronze", "table": "member_cdc",     "columns": ["investor_pan", "trader_name", "investor_email", "investor_mobile"] },
+        { "schema": "argus_silver", "table": "member_master",  "columns": ["investor_pan", "trader_name", "investor_email", "investor_mobile"] }
+      ]
+    },
+    {
+      "name": "PII_LOW",
+      "description": "Identifying but non-sensitive data — account numbers, member firm IDs, demat IDs. Hashed display for non-investigation roles; visible to surveillance + DPO.",
+      "attributes": [
+        { "name": "regulation",          "value": "DPDP Act 2023 §16" },
+        { "name": "masking_strategy",    "value": "ranger_hash_display" },
+        { "name": "retention_days",      "value": "8 * 365" },
+        { "name": "erasure_supported",   "value": "true" }
+      ],
+      "applied_to": [
+        { "schema": "argus_bronze", "table": "member_cdc",     "columns": ["member_firm_id", "trader_id", "investor_acct", "investor_demat"] },
+        { "schema": "argus_silver", "table": "member_master",  "columns": ["member_firm_id", "trader_id", "investor_acct", "investor_demat"] }
+      ]
+    },
+    {
+      "name": "FINANCIAL_SENSITIVE",
+      "description": "Financial details — order quantities, prices, P&L, position sizes. Restricted to surveillance + compliance + finance roles.",
+      "attributes": [
+        { "name": "regulation",          "value": "SEBI Master Circular Surv. ch.4" },
+        { "name": "masking_strategy",    "value": "ranger_role_grant_only" },
+        { "name": "retention_days",      "value": "8 * 365" }
+      ],
+      "applied_to": [
+        { "schema": "argus_bronze", "table": "orders_raw",     "columns": ["qty", "price", "book_state_after"] },
+        { "schema": "argus_bronze", "table": "trades_raw",     "columns": ["exec_price", "exec_qty"] },
+        { "schema": "argus_silver", "table": "order_events",   "columns": ["qty", "price"] },
+        { "schema": "argus_silver", "table": "executed_trades","columns": ["exec_price", "exec_qty", "notional_value"] }
+      ]
+    },
+    {
+      "name": "SURVEILLANCE_RESTRICTED",
+      "description": "Alert details, case files, STR drafts. Restricted to surveillance team + compliance; analyst access logged in Atlas access audit.",
+      "attributes": [
+        { "name": "regulation",          "value": "SEBI Master Circular Surv. ch.6" },
+        { "name": "masking_strategy",    "value": "ranger_role_grant_only" },
+        { "name": "access_audit_required", "value": "true" }
+      ],
+      "applied_to": [
+        { "schema": "argus_gold",   "table": "alert_candidates",            "columns": ["features", "shap_explanations", "disposition_analyst_id"] },
+        { "schema": "argus_gold",   "table": "confirmed_manipulation_cases","columns": ["str_narrative", "estimated_unlawful_gain"] }
+      ]
+    },
+    {
+      "name": "DPDP_CONSENT_REQUIRED",
+      "description": "Tables containing personal data subject to DPDP §6(4) consent management. Triggers row-level Ranger consent filter at query time for non-statutory roles.",
+      "attributes": [
+        { "name": "regulation",          "value": "DPDP Act 2023 §6(4)" },
+        { "name": "filter_strategy",     "value": "ranger_row_filter_consent" },
+        { "name": "statutory_exception", "value": "DPDP §7 legitimate-use" }
+      ],
+      "applied_to": [
+        { "schema": "argus_silver", "table": "member_master",          "columns": ["*"] },
+        { "schema": "argus_gold",   "table": "member_temporal_features","columns": ["*"] },
+        { "schema": "argus_gold",   "table": "cross_product_features",  "columns": ["*"] }
+      ]
+    },
+    {
+      "name": "SEBI_AUDIT_TRAIL",
+      "description": "Surveillance + alert + disposition + STR data subject to SEBI 8-year retention. Bypasses DPDP §6(4) consent filter under §7 legitimate-use exception.",
+      "attributes": [
+        { "name": "regulation",          "value": "SEBI Master Circular Surv. ch.7 + DPDP §7" },
+        { "name": "retention_days",      "value": "8 * 365" },
+        { "name": "consent_filter_bypass","value": "true" },
+        { "name": "history_expire_enabled","value": "false" }
+      ],
+      "applied_to": [
+        { "schema": "argus_bronze", "table": "legacy_alerts",              "columns": ["*"] },
+        { "schema": "argus_gold",   "table": "alert_candidates",           "columns": ["*"] },
+        { "schema": "argus_gold",   "table": "confirmed_manipulation_cases","columns": ["*"] },
+        { "schema": "argus_gold",   "table": "consent_audit",              "columns": ["*"] }
+      ]
+    }
+  ]
+}

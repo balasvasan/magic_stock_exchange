@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+  </defs>
+  <rect width="1400" height="700" fill="url(#bg)"/>
+  <rect width="1400" height="700" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 4 — GOVERNED VIEWS + RANGER POLICIES</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAY 6 · CLOSES ARG-5 (PART 1) · CP-10 (VIEWS) · CP-11 (POLICIES)</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Center: gold tables -->
+  <g transform="translate(550, 300)">
+    <rect width="300" height="120" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+    <text x="150" y="22" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2" text-anchor="middle">GOLD TABLES (UNGOVERNED)</text>
+    <text x="150" y="44" font-size="11" fill="#e5e7eb" text-anchor="middle">argus_${SID}_gold.alert_candidates</text>
+    <text x="150" y="60" font-size="11" fill="#e5e7eb" text-anchor="middle">argus_${SID}_gold.member_temporal_features</text>
+    <text x="150" y="76" font-size="11" fill="#e5e7eb" text-anchor="middle">argus_${SID}_gold.cross_product_features</text>
+    <text x="150" y="98" font-size="10" fill="#6b7280" text-anchor="middle">+ silver.member_master with consent_status</text>
+  </g>
+
+  <!-- 7 governed views layer -->
+  <g transform="translate(550, 200)">
+    <rect width="300" height="60" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="150" y="22" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2" text-anchor="middle">7 GOVERNED VIEWS (argus_${SID}_views)</text>
+    <text x="150" y="40" font-size="10.5" fill="#e5e7eb" text-anchor="middle">vw_alert_queue · vw_member_360 · vw_surveillance_audit</text>
+    <text x="150" y="54" font-size="10.5" fill="#e5e7eb" text-anchor="middle">vw_research_aggregates · vw_top_alerts ·  + 2 more</text>
+  </g>
+  <line x1="700" y1="260" x2="700" y2="300" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- 3 Ranger policy bands (tap into views) -->
+  <g transform="translate(120, 130)">
+    <rect width="1160" height="40" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="580" y="18" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2" text-anchor="middle">RANGER POLICY ENFORCEMENT (RUNTIME)</text>
+    <text x="580" y="33" font-size="10" fill="#9ca3af" text-anchor="middle">dpdp_consent_filter (row-level)  ·  pii_column_mask (column-level)  ·  surveillance_time_bound_access (row-level + temporal)</text>
+  </g>
+
+  <!-- 3 roles below — same view, three shapes -->
+  <!-- Role 1: surveillance_analyst -->
+  <g transform="translate(60, 460)">
+    <rect width="380" height="180" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">ROLE: SURVEILLANCE_ANALYST</text>
+    <text x="14" y="42" font-size="11" fill="#e5e7eb">Sees vw_alert_queue with:</text>
+    <g font-size="10.5" fill="#9ca3af">
+      <text x="20" y="62">• investor_pan = MASKED ('XXXXX1234X')</text>
+      <text x="20" y="78">• investor_email = MASKED ('xxx@xxx.com')</text>
+      <text x="20" y="94">• investor_mobile = MASKED ('XXXXXX1234')</text>
+      <text x="20" y="110">• consent-withdrawn investors filtered out</text>
+      <text x="20" y="126">• ESM/ASM enrichment visible</text>
+      <text x="20" y="142">• model_score + SHAP top-10 visible</text>
+    </g>
+    <text x="14" y="166" font-size="10" fill="#6b7280">Default working role for the day</text>
+  </g>
+
+  <!-- Role 2: compliance_dpo -->
+  <g transform="translate(460, 460)">
+    <rect width="380" height="180" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="14" y="22" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2">ROLE: COMPLIANCE_DPO</text>
+    <text x="14" y="42" font-size="11" fill="#e5e7eb">Sees vw_surveillance_audit with:</text>
+    <g font-size="10.5" fill="#9ca3af">
+      <text x="20" y="62">• investor_pan = FULL (statutory bypass)</text>
+      <text x="20" y="78">• investor_email = FULL</text>
+      <text x="20" y="94">• investor_mobile = FULL</text>
+      <text x="20" y="110">• consent-withdrawn rows VISIBLE (DPDP §7)</text>
+      <text x="20" y="126">• Erasure audit trail visible</text>
+      <text x="20" y="142">• Every query logged for compliance</text>
+    </g>
+    <text x="14" y="166" font-size="10" fill="#6366f1">Statutory bypass under DPDP §7</text>
+  </g>
+
+  <!-- Role 3: research_analyst -->
+  <g transform="translate(860, 460)">
+    <rect width="380" height="180" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="14" y="22" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">ROLE: RESEARCH_ANALYST</text>
+    <text x="14" y="42" font-size="11" fill="#e5e7eb">Sees vw_research_aggregates with:</text>
+    <g font-size="10.5" fill="#9ca3af">
+      <text x="20" y="62">• PII columns DROPPED entirely</text>
+      <text x="20" y="78">• Group-by aggregates only</text>
+      <text x="20" y="94">• consent-withdrawn investors EXCLUDED</text>
+      <text x="20" y="110">• Cases 15-19 (planted) NOT visible</text>
+      <text x="20" y="126">• k-anonymity on small groups (k≥5)</text>
+      <text x="20" y="142">• No row-level data ever</text>
+    </g>
+    <text x="14" y="166" font-size="10" fill="#6b7280">For trend analysis + reports</text>
+  </g>
+
+  <!-- Connecting arrows from policies to roles (downward) -->
+  <g stroke="#6366f1" stroke-width="1" stroke-opacity="0.5" stroke-dasharray="3 4" fill="none">
+    <line x1="250" y1="170" x2="250" y2="460"/>
+    <line x1="650" y1="170" x2="650" y2="460"/>
+    <line x1="1050" y1="170" x2="1050" y2="460"/>
+  </g>
+</svg>

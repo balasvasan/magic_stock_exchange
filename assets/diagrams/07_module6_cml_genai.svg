@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 720" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+  </defs>
+  <rect width="1400" height="720" fill="url(#bg)"/>
+  <rect width="1400" height="720" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 6 — GENAI / RAG STR NARRATIVE ENGINE</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAY 8 · CLOSES ARG-4 · CP-15 (RETRIEVAL) · CP-16 (DRAFTS)</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- Top bar: setup phase (one-time) -->
+  <g transform="translate(60, 130)">
+    <text x="0" y="0" font-size="10" fill="#9ca3af" font-weight="700" letter-spacing="2">SETUP PHASE — ONE-TIME (build_vector_store.py)</text>
+    <line x1="0" y1="10" x2="380" y2="10" stroke="#9ca3af" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 25)">
+      <rect width="260" height="100" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">CORPUS (3 sources)</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">• SEBI Master Circular</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">• PFUTP Regulations 2003</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">• 200 exemplar STRs</text>
+      <text x="12" y="90" font-size="10.5" fill="#e5e7eb">• ESM/ASM rules</text>
+    </g>
+    <line x1="260" y1="75" x2="300" y2="75" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(300, 25)">
+      <rect width="240" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">EMBED + INDEX</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">BGE-base-en-v1.5</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">768-dim vectors</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">HNSW + COSINE index</text>
+      <text x="12" y="90" font-size="10" fill="#9ca3af">~2000 chunks</text>
+    </g>
+    <line x1="540" y1="75" x2="580" y2="75" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(580, 25)">
+      <rect width="280" height="100" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">MILVUS COLLECTION</text>
+      <text x="12" y="42" font-size="11" fill="#e5e7eb">argus_${SID}_str_corpus</text>
+      <text x="12" y="58" font-size="10" fill="#9ca3af">Per-student to avoid collisions</text>
+      <text x="12" y="78" font-size="10" fill="#6b7280">CP-15: ≥ 2000 chunks across 3 source types</text>
+      <text x="12" y="94" font-size="10" fill="#6b7280">retrieval for 'layering' returns PFUTP 4(2)(e)</text>
+    </g>
+  </g>
+
+  <line x1="60" y1="270" x2="1340" y2="270" stroke="#374151" stroke-width="1" opacity="0.5"/>
+
+  <!-- Bottom: per-alert RAG flow (every 5 min) -->
+  <g transform="translate(60, 290)">
+    <text x="0" y="0" font-size="10" fill="#f96302" font-weight="700" letter-spacing="2">PER-ALERT FLOW — genai_rag_engine.py (RUNS PER CONFIRMED ALERT)</text>
+    <line x1="0" y1="10" x2="540" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+  </g>
+
+  <!-- Step 1 -->
+  <g transform="translate(60, 320)">
+    <rect width="180" height="80" rx="6" fill="#161b27" stroke="#9ca3af" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="10" fill="#9ca3af" font-weight="700">1. LOAD ALERT</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">SELECT * FROM</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">gold.alert_candidates</text>
+    <text x="12" y="74" font-size="10.5" fill="#e5e7eb">WHERE alert_id = ?</text>
+  </g>
+  <line x1="240" y1="360" x2="280" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 2: Retrieve regulations -->
+  <g transform="translate(280, 320)">
+    <rect width="180" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="10" fill="#f96302" font-weight="700">2. RETRIEVE REGS</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">Top-5 regulations</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">from Milvus by</text>
+    <text x="12" y="74" font-size="10.5" fill="#e5e7eb">pattern_type query</text>
+  </g>
+  <line x1="460" y1="360" x2="500" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 3: Retrieve exemplars -->
+  <g transform="translate(500, 320)">
+    <rect width="180" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="10" fill="#f96302" font-weight="700">3. RETRIEVE EXEMPLARS</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">Top-3 historical STRs</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">most similar to</text>
+    <text x="12" y="74" font-size="10.5" fill="#e5e7eb">current alert</text>
+  </g>
+  <line x1="680" y1="360" x2="720" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 4: News -->
+  <g transform="translate(720, 320)">
+    <rect width="180" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+    <text x="12" y="22" font-size="10" fill="#f96302" font-weight="700">4. FETCH NEWS</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">News headlines for</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">instrument ±24h</text>
+    <text x="12" y="74" font-size="10.5" fill="#e5e7eb">around event window</text>
+  </g>
+  <line x1="900" y1="360" x2="940" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 5: Assemble + LLM -->
+  <g transform="translate(940, 320)">
+    <rect width="180" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">5. CALL LLM</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">CAII-hosted</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Llama 3.1 70B</text>
+    <text x="12" y="74" font-size="10" fill="#6366f1">Local — DPDP §16</text>
+  </g>
+  <line x1="1120" y1="360" x2="1160" y2="360" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Step 6: Validate + write -->
+  <g transform="translate(1160, 320)">
+    <rect width="180" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="2"/>
+    <text x="12" y="22" font-size="10" fill="#f96302" font-weight="700">6. VALIDATE + WRITE</text>
+    <text x="12" y="42" font-size="10.5" fill="#e5e7eb">Parse JSON schema</text>
+    <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Retry once on fail</text>
+    <text x="12" y="74" font-size="10.5" fill="#e5e7eb">Write str_id sidecar</text>
+  </g>
+
+  <!-- Locked constraints box -->
+  <g transform="translate(60, 440)">
+    <rect width="1280" height="120" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="20" y="28" font-size="11" fill="#6366f1" font-weight="700" letter-spacing="2">5 LOCKED SYSTEM-PROMPT CONSTRAINTS (PRD §9 — ENFORCED, NOT OPTIONAL)</text>
+    <text x="20" y="52" font-size="11" fill="#e5e7eb">1. No fabrication — quote only values present in the structured payload  ·  2. Cite the correct PFUTP regulation per pattern type</text>
+    <text x="20" y="72" font-size="11" fill="#e5e7eb">3. Describe behavior, not intent — "the order pattern is consistent with X" not "the trader intended to manipulate"  ·  4. No named cases — no "this resembles the Adani case"</text>
+    <text x="20" y="92" font-size="11" fill="#e5e7eb">5. English only (Hindi versions written by humans for local jurisdiction filing)  ·  Output must validate against required-keys JSON schema</text>
+    <text x="20" y="110" font-size="10" fill="#9ca3af">FALLBACK: Malformed JSON → retry once with stricter prompt → still bad? Write FALLBACK_TEMPLATE skeleton with narrative_generation_failed=true. Never silently fail.</text>
+  </g>
+
+  <!-- Why this closes ARG-4 -->
+  <g transform="translate(60, 590)">
+    <rect width="1280" height="100" rx="6" fill="#1e2535" stroke="#374151" stroke-width="1"/>
+    <text x="20" y="28" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">WHY THIS CLOSES ARG-4 (40-MIN HAND-WRITTEN STRS)</text>
+    <text x="20" y="52" font-size="11" fill="#e5e7eb">Pre-ARGUS: senior analysts spent 40 minutes on each STR narrative — looking up the right PFUTP citation, paraphrasing exemplars, writing 600-800 words.</text>
+    <text x="20" y="72" font-size="11" fill="#e5e7eb">Backlog hit 340 reports, oldest 70 days old. SEBI cited this in the inspection.</text>
+    <text x="20" y="92" font-size="10.5" fill="#9ca3af">Post-ARGUS: 8-min draft (5s LLM call + 8 minutes analyst review-and-edit). Same SEBI-acceptable quality. Backlog drops to zero. Analysts redeploy time to actual investigation.</text>
+  </g>
+</svg>

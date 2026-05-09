@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 880" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f1117"/><stop offset="100%" stop-color="#161b27"/></linearGradient>
+    <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="0.6" fill="#f96302" fill-opacity="0.08"/></pattern>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#f96302"/></marker>
+    <marker id="arInd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/></marker>
+  </defs>
+  <rect width="1400" height="880" fill="url(#bg)"/>
+  <rect width="1400" height="880" fill="url(#dots)"/>
+
+  <text x="60" y="48" font-size="22" font-weight="700" fill="#f96302" letter-spacing="3">MODULE 7 — SDX GOVERNANCE + DPDP COMPLIANCE</text>
+  <text x="60" y="72" font-size="13" fill="#9ca3af" letter-spacing="1">DAY 9 · CLOSES ARG-5 · CP-17 / CP-18 / CP-19 ⚠ COMPLIANCE GATE</text>
+  <line x1="60" y1="86" x2="280" y2="86" stroke="#f96302" stroke-width="2"/>
+
+  <!-- ============== Three sub-flows arranged vertically ============== -->
+
+  <!-- Sub-flow 1: Atlas classifications (CP-17) -->
+  <g transform="translate(60, 130)">
+    <text x="0" y="0" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">SUB-FLOW 1 — ATLAS CLASSIFICATIONS (apply_atlas_tags.py · CP-17)</text>
+    <line x1="0" y1="10" x2="600" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 25)">
+      <rect width="240" height="80" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">JSON SOURCE OF TRUTH</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">atlas_classifications.json</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">6 tags × per-student copies</text>
+      <text x="12" y="74" font-size="10" fill="#6b7280">Logical → physical at runtime</text>
+    </g>
+    <line x1="240" y1="65" x2="280" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(280, 25)">
+      <rect width="240" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">PHASE 1 — CREATE TYPES</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">PII_HIGH_${SID}</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">PII_LOW_${SID} · ...</text>
+      <text x="12" y="74" font-size="10" fill="#6b7280">Idempotent — skips existing</text>
+    </g>
+    <line x1="520" y1="65" x2="560" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(560, 25)">
+      <rect width="240" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">PHASE 2 — APPLY TO COLS</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">Walk applied_to lists</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">~30 column attachments</text>
+      <text x="12" y="74" font-size="10" fill="#6b7280">propagate=true (lineage)</text>
+    </g>
+    <line x1="800" y1="65" x2="840" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(840, 25)">
+      <rect width="240" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="2">✓ CP-17 VERIFICATION</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">≥6 types registered</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">≥30 column attachments</text>
+      <text x="12" y="74" font-size="10" fill="#9ca3af">Atlas UI lineage view</text>
+    </g>
+  </g>
+
+  <!-- Sub-flow 2: DPDP §6(4) consent withdrawal (CP-18) -->
+  <g transform="translate(60, 270)">
+    <text x="0" y="0" font-size="11" fill="#f96302" font-weight="700" letter-spacing="2">SUB-FLOW 2 — DPDP §6(4) CONSENT WITHDRAWAL (ccpa_optout_enforcement.py · CP-18)</text>
+    <line x1="0" y1="10" x2="600" y2="10" stroke="#f96302" stroke-width="1" stroke-opacity="0.4"/>
+
+    <g transform="translate(0, 25)">
+      <rect width="240" height="80" rx="6" fill="#1e2535" stroke="#9ca3af" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#9ca3af" font-weight="700">REQUEST IN</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">Investor opts out of</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">ANALYTICS, MARKETING</text>
+      <text x="12" y="74" font-size="10" fill="#6b7280">via Consent Manager</text>
+    </g>
+    <line x1="240" y1="65" x2="280" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(280, 25)">
+      <rect width="240" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">UPDATE silver.member_master</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">consent_status=WITHDRAWN</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">consent_purpose=&lt;remaining&gt;</text>
+      <text x="12" y="74" font-size="10" fill="#9ca3af">Statutory kept under DPDP §7</text>
+    </g>
+    <line x1="520" y1="65" x2="560" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(560, 25)">
+      <rect width="240" height="80" rx="6" fill="#161b27" stroke="#f96302" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="11" fill="#f96302" font-weight="700">AUDIT ROW WRITTEN</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">gold.consent_audit</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">event_type=CONSENT_WITHDRAWN</text>
+      <text x="12" y="74" font-size="10" fill="#6b7280">+ Iceberg pre/post snapshots</text>
+    </g>
+    <line x1="800" y1="65" x2="840" y2="65" stroke="#f96302" stroke-width="1.5" marker-end="url(#ar)"/>
+
+    <g transform="translate(840, 25)">
+      <rect width="240" height="80" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="2">✓ CP-18 VERIFICATION</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">vw_research_aggregates</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">no longer shows investor</text>
+      <text x="12" y="74" font-size="10" fill="#9ca3af">Surveillance views still do</text>
+    </g>
+  </g>
+
+  <!-- Sub-flow 3: DPDP §12 erasure — THE COMPLIANCE GATE -->
+  <g transform="translate(60, 410)">
+    <text x="0" y="0" font-size="13" fill="#6366f1" font-weight="700" letter-spacing="3">⚠ SUB-FLOW 3 — DPDP §12 ERASURE (gdpr_erasure_workflow.py · CP-19 COMPLIANCE GATE)</text>
+    <line x1="0" y1="10" x2="800" y2="10" stroke="#6366f1" stroke-width="2"/>
+  </g>
+
+  <!-- Erasure flow with prominent indigo styling -->
+  <g transform="translate(60, 440)">
+    <rect width="1280" height="200" rx="6" fill="#1a1632" fill-opacity="0.5" stroke="#6366f1" stroke-width="2"/>
+
+    <g transform="translate(20, 20)">
+      <rect width="200" height="80" rx="6" fill="#1e2535" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">1. REQUEST IN</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">DPO receives §12 request</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">Identity verified upstream</text>
+      <text x="12" y="74" font-size="10" fill="#9ca3af">(DigiLocker / Aadhaar OTP)</text>
+    </g>
+    <line x1="220" y1="60" x2="260" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arInd)"/>
+
+    <g transform="translate(260, 20)">
+      <rect width="200" height="80" rx="6" fill="#1e2535" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">2. SNAPSHOT BEFORE</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">For each target table:</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">capture current</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">Iceberg snapshot_id</text>
+    </g>
+    <line x1="460" y1="60" x2="500" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arInd)"/>
+
+    <g transform="translate(500, 20)">
+      <rect width="200" height="80" rx="6" fill="#1e2535" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">3. DELETE PII</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">silver.member_master</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">bronze.member_cdc</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">+ Milvus sweep</text>
+    </g>
+    <line x1="700" y1="60" x2="740" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arInd)"/>
+
+    <g transform="translate(740, 20)">
+      <rect width="200" height="80" rx="6" fill="#1e2535" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">4. RETAIN STATUTORY</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">SEBI_AUDIT_TRAIL tables:</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">alert_candidates kept</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">(DPDP §7 exception)</text>
+    </g>
+    <line x1="940" y1="60" x2="980" y2="60" stroke="#6366f1" stroke-width="1.5" marker-end="url(#arInd)"/>
+
+    <g transform="translate(980, 20)">
+      <rect width="280" height="80" rx="6" fill="#1e2535" stroke="#6366f1" stroke-width="2"/>
+      <text x="12" y="22" font-size="10" fill="#6366f1" font-weight="700">5. AUDIT ROW + SNAPSHOT_AFTER</text>
+      <text x="12" y="42" font-size="10.5" fill="#e5e7eb">consent_audit row:</text>
+      <text x="12" y="58" font-size="10.5" fill="#e5e7eb">event_type=ERASURE_COMPLETED</text>
+      <text x="12" y="74" font-size="10.5" fill="#e5e7eb">pre_snap + post_snap recorded</text>
+    </g>
+
+    <!-- The proof loop -->
+    <g transform="translate(20, 120)">
+      <rect width="1240" height="60" rx="6" fill="#0f1117" stroke="#6366f1" stroke-width="2" stroke-dasharray="6 3"/>
+      <text x="20" y="22" font-size="10" fill="#6366f1" font-weight="700" letter-spacing="2">⚡ THE TIME-TRAVEL PROOF LOOP — THIS IS WHAT CP-19 ACTUALLY VERIFIES</text>
+      <text x="20" y="42" font-size="11" fill="#e5e7eb">SELECT ... FROM gold.alert_candidates  FOR SYSTEM_VERSION AS OF &lt;pre_snap&gt;  WHERE investor_pan_hash = &lt;hash&gt;  →  rows visible (proves data existed)</text>
+      <text x="20" y="56" font-size="11" fill="#e5e7eb">SELECT ... FROM silver.member_master  FOR SYSTEM_VERSION AS OF &lt;post_snap&gt;  WHERE investor_pan_hash = &lt;hash&gt;  →  zero rows (proves erasure was actually applied)</text>
+    </g>
+  </g>
+
+  <!-- CP-19 Pass criteria -->
+  <g transform="translate(60, 670)">
+    <rect width="1280" height="120" rx="6" fill="#1a1632" stroke="#6366f1" stroke-width="2"/>
+    <text x="20" y="28" font-size="13" fill="#6366f1" font-weight="700" letter-spacing="3">⚠ CP-19 — THE COMPLIANCE GATE — NON-NEGOTIABLE PASS CONDITION</text>
+    <text x="20" y="55" font-size="11" fill="#e5e7eb">Failing CP-19 fails the entire capstone, regardless of overall score.  This is intentional: a surveillance platform that can't prove DPDP §12 compliance is unlawful to operate.</text>
+    <text x="20" y="78" font-size="11" fill="#e5e7eb">Required evidence: (a) at least one ERASURE_COMPLETED audit row with both pre_snap and post_snap snapshot IDs populated;</text>
+    <text x="20" y="93" font-size="11" fill="#e5e7eb">(b) FOR SYSTEM_VERSION AS OF &lt;pre_snap&gt; query returns the erased rows; (c) FOR SYSTEM_VERSION AS OF &lt;post_snap&gt; same query returns zero rows;</text>
+    <text x="20" y="108" font-size="11" fill="#e5e7eb">(d) statutory tables tagged SEBI_AUDIT_TRAIL_${SID} still contain rows after erasure (DPDP §7 retention proves working).</text>
+  </g>
+
+  <!-- Three CP markers -->
+  <g transform="translate(60, 815)">
+    <text font-size="10" font-weight="700" fill="#6b7280" letter-spacing="2">CHECKPOINT SUMMARY</text>
+    <g transform="translate(0, 20)">
+      <circle cx="10" cy="6" r="9" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+      <text x="10" y="10" font-size="9" font-family="ui-monospace" font-weight="700" fill="#f96302" text-anchor="middle">17</text>
+      <text x="28" y="10" font-size="11" fill="#9ca3af">Atlas tags applied — ≥6 types, ≥30 column attachments visible in Atlas UI lineage</text>
+    </g>
+    <g transform="translate(420, 20)">
+      <circle cx="10" cy="6" r="9" fill="#1e2535" stroke="#f96302" stroke-width="1.5"/>
+      <text x="10" y="10" font-size="9" font-family="ui-monospace" font-weight="700" fill="#f96302" text-anchor="middle">18</text>
+      <text x="28" y="10" font-size="11" fill="#9ca3af">Consent withdrawal — researcher view excludes investor; surveillance view still includes</text>
+    </g>
+    <g transform="translate(900, 20)">
+      <circle cx="10" cy="6" r="13" fill="#6366f1" stroke="#6366f1" stroke-width="2"/>
+      <text x="10" y="10" font-size="9" font-family="ui-monospace" font-weight="700" fill="#fff" text-anchor="middle">19</text>
+      <text x="32" y="10" font-size="11" fill="#6366f1" font-weight="700">DPDP §12 ERASURE — pre/post Iceberg time-travel proof on ≥1 audit row</text>
+    </g>
+  </g>
+</svg>

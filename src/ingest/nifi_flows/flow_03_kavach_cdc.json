@@ -1,0 +1,60 @@
+{
+  "flow": {
+    "id": "flow_03_kavach_cdc",
+    "name": "ARGUS — KAVACH KYC CDC (FLOW-03)",
+    "version": "1.0",
+    "description": "Debezium CDC against the KAVACH Oracle KYC database into argus.{{STUDENT_ID}}.member.cdc.v1 (compacted Kafka topic). PII-bearing — every record carries investor PAN, name, email, mobile. The flow attaches an Atlas tag attribute (PII_HIGH) at landing time so downstream NiFi processors can enforce TLS, no-disk-spill, and audit logging.",
+    "comment": "Reference stub. Production XML in s3://argus-training-assets/argus-capstone/v1.0/nifi_flows/.",
+    "processors": [
+      {
+        "id": "p1",
+        "name": "ConsumeKafka_DebeziumKAVACH",
+        "type": "org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${DEBEZIUM_KAFKA_BROKERS}",
+          "topic_name": "kavach.dbz.investors,kavach.dbz.traders,kavach.dbz.members",
+          "group_id": "argus.bronze.member_cdc",
+          "auto_offset_reset": "earliest",
+          "concurrent_tasks": 3
+        }
+      },
+      {
+        "id": "p2",
+        "name": "JoltTransformJSON_FlattenDebezium",
+        "type": "org.apache.nifi.processors.standard.JoltTransformJSON",
+        "config": {
+          "comment": "Flatten Debezium envelope (op, before, after, source, ts_ms) into the ARGUS CDC schema.",
+          "jolt_transformation_DSL": "shift",
+          "jolt_specification": "spec/kavach_dbz_to_argus_cdc.jolt"
+        }
+      },
+      {
+        "id": "p3",
+        "name": "UpdateAttribute_TagPII",
+        "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+        "config": {
+          "atlas.classification": "PII_HIGH",
+          "data.sensitivity": "PII_HIGH",
+          "comment": "Attribute is read by downstream Atlas hook to apply classification at write time."
+        }
+      },
+      {
+        "id": "p4",
+        "name": "PublishKafka_MemberCDC",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.member.cdc.v1",
+          "key_attribute": "member_firm_id",
+          "delivery_guarantee": "Guarantee Replicated Delivery",
+          "use_transactions": "true"
+        }
+      }
+    ],
+    "connections": [
+      {"from": "p1", "to": "p2", "relationship": "success"},
+      {"from": "p2", "to": "p3", "relationship": "success"},
+      {"from": "p3", "to": "p4", "relationship": "success"}
+    ]
+  }
+}

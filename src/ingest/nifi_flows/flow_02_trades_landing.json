@@ -1,0 +1,56 @@
+{
+  "flow": {
+    "id": "flow_02_trades_landing",
+    "name": "ARGUS — NIPATAN Trades Landing (FLOW-02)",
+    "version": "1.0",
+    "description": "Receives executed-trade events from the NIPATAN clearing system and produces to argus.{{STUDENT_ID}}.trades.v1. NIPATAN already publishes to a private Kafka cluster; this flow consumes from there and re-keys by instrument_code for the surveillance-VLAN Kafka.",
+    "comment": "Reference stub. Production XML in s3://argus-training-assets/argus-capstone/v1.0/nifi_flows/.",
+    "processors": [
+      {
+        "id": "p1",
+        "name": "ConsumeKafka_NIPATAN_Source",
+        "type": "org.apache.nifi.processors.kafka.pubsub.ConsumeKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${NIPATAN_KAFKA_BROKERS}",
+          "topic_name": "nipatan.trades.cleared",
+          "group_id": "argus.bronze.trades",
+          "auto_offset_reset": "earliest",
+          "concurrent_tasks": 6
+        }
+      },
+      {
+        "id": "p2",
+        "name": "UpdateAttribute_RekeyByInstrument",
+        "type": "org.apache.nifi.processors.attributes.UpdateAttribute",
+        "config": {
+          "kafka.key": "${jsonPath:'$.instrument_code'}"
+        }
+      },
+      {
+        "id": "p3",
+        "name": "ValidateRecord_TradeSchema",
+        "type": "org.apache.nifi.processors.standard.ValidateRecord",
+        "config": {
+          "schema_text": "argus.{{STUDENT_ID}}.trades.v1.avsc",
+          "validation_strategy": "STRICT"
+        }
+      },
+      {
+        "id": "p4",
+        "name": "PublishKafka_TradesTopic",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.trades.v1",
+          "key_attribute": "kafka.key",
+          "delivery_guarantee": "Guarantee Replicated Delivery"
+        }
+      }
+    ],
+    "connections": [
+      {"from": "p1", "to": "p2", "relationship": "success"},
+      {"from": "p2", "to": "p3", "relationship": "success"},
+      {"from": "p3", "to": "p4", "relationship": "valid"}
+    ]
+  }
+}

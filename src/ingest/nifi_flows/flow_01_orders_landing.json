@@ -1,0 +1,64 @@
+{
+  "flow": {
+    "id": "flow_01_orders_landing",
+    "name": "ARGUS — TARANG Orders Landing (FLOW-01)",
+    "version": "1.0",
+    "description": "Mirrors TARANG multicast order-event firehose into Kafka topic argus.{{STUDENT_ID}}.orders.v1. Multicast cannot cross the surveillance VLAN boundary, so this flow runs on a NiFi node positioned inside the matching-engine VLAN and produces to the surveillance-VLAN Kafka cluster.",
+    "comment": "This is a reference stub for student import. The production export contains environment-specific UUIDs and is fetched from s3://argus-training-assets/argus-capstone/v1.0/nifi_flows/flow_01_orders_landing.xml at lab time.",
+    "processors": [
+      {
+        "id": "p1",
+        "name": "ConsumeJMS_TARANG_Multicast",
+        "type": "org.apache.nifi.processors.standard.ConsumeJMS",
+        "config": {
+          "destination": "tarang.events.multicast",
+          "session_acknowledge_mode": "AUTO_ACKNOWLEDGE",
+          "concurrent_tasks": 8
+        }
+      },
+      {
+        "id": "p2",
+        "name": "ValidateRecord_OrderEventSchema",
+        "type": "org.apache.nifi.processors.standard.ValidateRecord",
+        "config": {
+          "record_reader": "JsonTreeReader",
+          "schema_access_strategy": "schema-text-property",
+          "schema_text": "argus.{{STUDENT_ID}}.orders.v1.avsc",
+          "validation_strategy": "STRICT"
+        }
+      },
+      {
+        "id": "p3",
+        "name": "PublishKafka_OrdersTopic",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.orders.v1",
+          "key_attribute": "instrument_code",
+          "delivery_guarantee": "Guarantee Replicated Delivery",
+          "compression_type": "lz4",
+          "max_request_size": "1 MB"
+        }
+      },
+      {
+        "id": "p4_dlq",
+        "name": "PublishKafka_OrdersDLQ",
+        "type": "org.apache.nifi.processors.kafka.pubsub.PublishKafka_2_6",
+        "config": {
+          "bootstrap_servers": "${KAFKA_BROKERS}",
+          "topic_name": "argus.{{STUDENT_ID}}.orders.dlq",
+          "delivery_guarantee": "Guarantee Single Node Delivery"
+        }
+      }
+    ],
+    "connections": [
+      {"from": "p1", "to": "p2", "relationship": "success"},
+      {"from": "p2", "to": "p3", "relationship": "valid"},
+      {"from": "p2", "to": "p4_dlq", "relationship": "invalid"}
+    ],
+    "back_pressure": {
+      "object_threshold": 100000,
+      "data_size_threshold": "1 GB"
+    }
+  }
+}

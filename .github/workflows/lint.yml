@@ -1,0 +1,73 @@
+name: lint
+
+on:
+  pull_request:
+    branches: [main, solutions]
+  push:
+    branches: [main]
+
+jobs:
+  python-lint:
+    name: ruff (Python)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install ruff
+        run: pip install ruff==0.7.4
+      - name: Run ruff
+        run: |
+          ruff check src/ data/ \
+            --select E,F,W,I \
+            --ignore E501,E402 \
+            --line-length 100
+      - name: Compile-check all Python sources
+        run: |
+          for f in $(find src/ data/ -name '*.py'); do
+            python -m py_compile "$f"
+          done
+
+  sql-lint:
+    name: sqlfluff (Hive/Impala)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install sqlfluff
+        run: pip install sqlfluff==3.2.5
+      - name: Run sqlfluff
+        run: |
+          sqlfluff lint sql/ --dialect hive \
+            --exclude-rules L016,L036,L039 \
+            --disable-noqa false || true
+        # `|| true` keeps lint advisory until the SQL has been hand-reviewed
+        # against the dialect-specific quirks; remove it once stable.
+
+  json-validate:
+    name: JSON validate (Atlas + NiFi flows)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Validate JSON files
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          failures = []
+          for p in pathlib.Path('.').rglob('*.json'):
+              try:
+                  json.loads(p.read_text())
+              except json.JSONDecodeError as e:
+                  failures.append((str(p), str(e)))
+          if failures:
+              for f, e in failures:
+                  print(f"FAIL {f}: {e}")
+              sys.exit(1)
+          print(f"OK — validated {sum(1 for _ in pathlib.Path('.').rglob('*.json'))} JSON files")
+          PY

@@ -2,6 +2,8 @@
 
 > 📊 **Visual reference**: [Module 1 streaming + real-time detection pipeline](../assets/diagrams/02_module1_streaming.md) ([SVG](../assets/diagrams/02_module1_streaming.svg))
 
+> 👋 **New to NiFi, Spark Streaming, PyFlink CEP, or SSB SQL?** Read [`docs/module-1-primer.md`](module-1-primer.md) first. It explains what each piece of Module 1's technology *is* before you start using it. About 20 minutes — well worth the time.
+
 > **Closes deficiency:** ARG-1 — peak ingest throughput AND peak detection latency
 > **Day:** 2 (full) + Day 3 (full) + Day 4 morning = 3.5 days
 > **Checkpoints:** CP-02, CP-02b, CP-03, CP-04, CP-04b

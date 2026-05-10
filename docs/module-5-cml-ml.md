@@ -2,6 +2,9 @@
 
 > 📊 **Visual reference**: [Module 5 ML training + production gate](../assets/diagrams/06_module5_cml_ml.md) ([SVG](../assets/diagrams/06_module5_cml_ml.svg))
 
+> 👋 **New to MLflow, Hyperopt, XGBoost, or SHAP?** Read [`docs/module-5-primer.md`](module-5-primer.md) first. About 25 minutes.
+
+
 > **Closes deficiency:** ARG-3 — 92% of fired alerts are closed as no-action; analysts buried in noise
 > **Day:** 7
 > **Checkpoints:** CP-12, CP-13, CP-14

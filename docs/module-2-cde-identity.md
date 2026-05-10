@@ -2,6 +2,9 @@
 
 > 📊 **Visual reference**: [Module 2 identity + book reconstruction](../assets/diagrams/03_module2_cde_identity.md) ([SVG](../assets/diagrams/03_module2_cde_identity.svg))
 
+> 👋 **New to SCD2, fuzzy matching, or Iceberg time-travel?** Read [`docs/module-2-primer.md`](module-2-primer.md) first. About 20 minutes.
+
+
 > **Closes deficiency:** ARG-2 part 1 — cannot reconstruct order-book state, cannot resolve same investor across identifiers
 > **Day:** 3–4
 > **Checkpoints:** CP-05, CP-06

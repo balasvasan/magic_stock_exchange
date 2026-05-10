@@ -1,10 +1,28 @@
 # Lab 1.5 — SSB SQL & Batch-vs-Stream Latency Comparison (CP-04b)
 
+> 👋 **Module 1 first-timer?** Read [`docs/module-1-primer.md`](../docs/module-1-primer.md) before starting this lab. About 20 minutes — explains how SSB SQL fits with PyFlink CEP and Spark Streaming.
+
 > ℹ️ **Module:** 1 — CDF + Flink + SSB Streaming Ingest & Real-Time Detection
 >
-> ⏱ **Time budget:** 90 minutes (Day 3 afternoon)
+> ⏱ **Time budget:** ~75 minutes if SSB UI access works first try; up to 2 hours if the SSB cluster has connectivity issues.
 >
-> ✅ **Closes:** ARG-1 (analyst-driven detection), and demonstrates the full real-time + batch architecture
+> ✅ **Closes:** ARG-1 (analyst-driven detection capability), and demonstrates the full 3-engine architecture
+>
+> **Source files:** [`src/ingest/ssb/job_11_cross_product_imbalance.sql`](../src/ingest/ssb/job_11_cross_product_imbalance.sql), [`src/ingest/ssb/README.md`](../src/ingest/ssb/README.md), [`src/ingest/job_12_realtime_alert_persistence.py`](../src/ingest/job_12_realtime_alert_persistence.py)
+
+## What you're going to do
+
+In order:
+
+1. **Verify JOB-12 is running** — the Spark Streaming job that persists Flink/SSB alerts to Iceberg. (~5 min)
+2. **Read the SSB SQL** in `src/ingest/ssb/job_11_cross_product_imbalance.sql` — understand the HOP window logic. (~10 min)
+3. **Deploy JOB-11 via SSB UI** — copy the SQL, fill in parameters, click Deploy. (~15 min)
+4. **Generate Case 2 traffic** with FLOW-SIM and confirm the alert fires. (~10 min)
+5. **Verify CP-04b pass condition** — alert lands within 60s of window close. (~10 min)
+6. **Run the 3-engine comparison** — same Case 0, see the latency delta across Spark batch / PyFlink / SSB. (~15 min)
+7. **Reflect** on the architectural lesson. (~5 min)
+
+Total: about 75 minutes. The 3-engine comparison at the end is the high point of Module 1 — it's where the 3-engine architecture becomes intuitive.
 
 ## What this lab teaches
 
@@ -145,12 +163,70 @@ You've built the full real-time detection path: NiFi → Kafka → {PyFlink CEP,
 
 CP-02b and CP-04b together close ARG-1's "peak detection latency" deficit. ARG-1's "peak ingest throughput" deficit was already closed by CP-03 in Lab 1.3.
 
-## Common errors
+## Common failure mode #1 — SSB job state goes to FAILED immediately
 
-**SSB job FAILED** — most common cause: the `instrument_master_${STUDENT_ID}` table-from-topic doesn't exist or is empty. Without instrument metadata, the JOIN can't classify CASH vs FUT vs OPT. Run JOB-04 first to populate `argus.${STUDENT_ID}.instrument.cdc.v1`.
+**Symptom:** you click Deploy in SSB UI, the job's status briefly shows DEPLOYING, then jumps straight to FAILED. The job logs reference the `instrument_master_${STUDENT_ID}` table.
 
-**`Cannot detect underlying_code`** — check that your synthetic data generator is producing instruments with parseable underlying codes. The expected pattern is `BNXM-CE-1500` → underlying=BNXM, product_type=OPT_CALL.
+**Cause:** the SSB SQL JOINs against an instrument-master table-from-topic that's populated by JOB-04 (external feeds Bronze ingest). If JOB-04 hasn't run, the topic is empty and the JOIN has nothing to match against, which manifests as a deploy-time failure.
 
-**No alerts fire even though Case 2 is in the data** — verify the threshold matches what the planted case generates. Lab 1.5's calibration: imbalance >= 70000 (= 7.0 × 10000 lot size). If your generator produces smaller imbalances for Case 2, lower the threshold in JOB-11's HAVING clause and re-deploy.
+**Diagnosis:**
+```bash
+# Confirm the instrument.cdc.v1 topic has rows
+kafka-run-class kafka.tools.GetOffsetShell \
+    --bootstrap-server ${KAFKA_BROKERS} \
+    --topic argus.${STUDENT_ID}.instrument.cdc.v1 --time -1 \
+    | awk -F: '{sum += $3} END {print "instrument.cdc rows:", sum}'
+```
+If the count is 0, JOB-04 hasn't populated it.
 
-**Latency >60s** — the 60s window has to close before alerts fire, so latencies in the 60-90s range are normal for SSB's HOP window. To get sub-second SSB latencies you'd switch to a TUMBLE or CUMULATE pattern, but the lab uses HOP because it's the most common analyst pattern.
+**Fix:** ensure JOB-04 from Lab 1.2 is running, give it a few minutes to fill the topic, then redeploy the SSB job.
+
+## Common failure mode #2 — `Cannot detect underlying_code`
+
+**Symptom:** SSB job runs but fires zero alerts. Logs reference an inability to classify instruments.
+
+**Cause:** the SQL extracts the underlying equity code from the instrument code via string parsing (e.g., `BNXM-CE-1500` → `underlying=BNXM`). If your synthetic data generator produces instrument codes in a different format, the parsing fails silently, and every event is classified as 'UNKNOWN', which the WHERE clause filters out.
+
+**Diagnosis:**
+```bash
+# Sample 10 instrument codes from the topic
+kafka-console-consumer --bootstrap-server ${KAFKA_BROKERS} \
+    --topic argus.${STUDENT_ID}.instrument.cdc.v1 \
+    --from-beginning --max-messages 10 \
+    | jq -r '.instrument_code'
+```
+Expected format: `<UNDERLYING>-<PRODUCT>-<STRIKE_OR_EXPIRY>` (e.g., `BNXM-CE-1500`, `BNXM-FUT-2026-03`). If your codes don't follow this pattern, the parsing logic in JOB-11 needs adjustment.
+
+**Fix:** either re-generate synthetic data with `--seed 42` (canonical format), or modify JOB-11's parsing to match your data's actual format.
+
+## Common failure mode #3 — No alerts fire even though Case 2 is in the data
+
+**Symptom:** the SSB job runs, the latency comparison query at the end returns rows for FLINK but not for SSB.
+
+**Cause:** the threshold (`imbalance >= 70000` in the HAVING clause) doesn't match what your planted Case 2 produces.
+
+**Diagnosis:** open `data/generated/orders_synthetic.jsonl.gz` and look at Case 2's imbalance values:
+```bash
+zcat data/generated/orders_synthetic.jsonl.gz \
+    | grep '"planted_case_idx": 2' \
+    | jq -r '.qty' | sort -n | tail
+```
+If the largest qty values are < 70,000, the threshold is too high.
+
+**Fix:** lower the threshold in JOB-11's HAVING clause to match your data — for instance, `HAVING ABS(SUM(...)) >= 50000` — and redeploy.
+
+## Common failure mode #4 — Latency stays > 60s
+
+**Symptom:** CP-04b's pass condition says "within 60 seconds of window close", but your measured latency is 90+ seconds.
+
+**Cause:** SSB's HOP window with a 60-second window and 10-second slide means the window closes 60 seconds after it opens. Plus a few seconds for SSB to compute aggregates and emit the alert. Latencies in the 60–90s range are normal for HOP windows.
+
+**Fix:** if 60s is your hard ceiling, switch from HOP to TUMBLE in the SQL — TUMBLE windows fire as soon as they close, no slide overlap. The trade-off: TUMBLE windows have boundary effects (a Case 2 pattern that straddles a window boundary may not fire). For the lab, HOP at ~70s p99 is acceptable; pure SSB workloads in production tune this empirically.
+
+## Wrap-up — what you can now do that you couldn't before
+
+You can deploy a streaming SQL job through SSB's web UI without writing any Python or Java. You understand why the same pattern looks completely different in three engines (Spark batch SQL, PyFlink CEP imperative pattern, SSB SQL declarative window). You've measured a real latency delta between the three engines and can articulate the trade-offs.
+
+Most importantly: **Module 1 is complete.** ARG-1 is provably closed. The legacy MSE platform's worst day — peak F&O expiry-Thursday volume with no real-time intervention — is no longer a problem.
+
+Module 2 starts Day 4 afternoon and tackles ARG-2 (temporal feature engineering): identity resolution across brokers (the multi-broker manipulation pattern), order-book reconstruction with Iceberg time-travel, and the temporal/cross-product features that ML needs in Module 5. Allow about 6 hours total for Modules 2 + 3.

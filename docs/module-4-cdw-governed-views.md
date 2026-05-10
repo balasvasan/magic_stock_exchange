@@ -2,6 +2,9 @@
 
 > 📊 **Visual reference**: [Module 4 governed views by role](../assets/diagrams/05_module4_cdw_governed.md) ([SVG](../assets/diagrams/05_module4_cdw_governed.svg))
 
+> 👋 **New to Cloudera Data Warehouse or Ranger policies?** Read [`docs/module-4-primer.md`](module-4-primer.md) first. About 10 minutes.
+
+
 > **Closes deficiency:** ARG-5 part 1 — coarse-grained access; no row/column governance on PII
 > **Day:** 6
 > **Checkpoints:** CP-10, CP-11

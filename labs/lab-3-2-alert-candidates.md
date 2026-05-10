@@ -1,22 +1,45 @@
 # Lab 3.2 — Alert Candidates (CP-08)
 
+> 👋 **Module 3 first-timer?** Read [`docs/module-3-primer.md`](../docs/module-3-primer.md) first. About 15 minutes.
+
 > ℹ️ **Module:** 3 — Temporal & Cross-Product Feature Engineering
 > **Closes deficiency:** ARG-2 part 2 (alert candidate generation)
+> **Time:** ~75 minutes if all 10 cases surface; up to 2 hours if rule thresholds need adjustment.
 > **Source files:** [`src/transform/job_08_gold_alert_candidates.py`](../src/transform/job_08_gold_alert_candidates.py)
 
-## Objectives
+## What you're going to do
 
-- Run JOB-08 to fire deterministic rule-based alerts into `argus_${STUDENT_ID}_gold.alert_candidates`
-- Verify all 10 planted manipulation cases (indices 0–9) surface as alerts
-- Inspect the 60-feature payload that JOB-09 (Module 5) will consume
+1. **Confirm prerequisites** — temporal + cross-product features populated. (~3 min)
+2. **Run JOB-08** — fires deterministic rule-based alerts. (~10 min)
+3. **Inspect alerts by rule** — see what each rule caught. (~10 min)
+4. **Verify all 10 planted manipulation cases (0–9) surface** — this is CP-08's core test. (~30 min)
+5. **Inspect the 60-feature payload** that ML will consume in Module 5. (~10 min)
+6. **Verify CP-08 pass conditions** — three named checks. (~5 min)
 
-## Why this matters
+Total: ~75 minutes.
 
-This is the moment of truth for the rules engine. The PRD calls for a deterministic rule layer that produces auditable, regulator-defensible candidates — alerts that any junior analyst can replay against historical data and reproduce. The ML model in Module 5 only ranks these candidates; it doesn't generate them. That separation is what keeps the platform defensible: SEBI doesn't accept "the ML decided not to fire" as a reason for a missed manipulation, but they do accept "the rules fired the alert; the ML deprioritized it; here's the SHAP explanation."
+## Before you begin — prerequisite checklist
 
-## Procedure
+- [ ] [Lab 3.1](lab-3-1-temporal-features.md) is complete — `gold.member_temporal_features` and `gold.cross_product_features` populated
+- [ ] You have CDE access and ~6 executors available
 
-### Step 1 — Confirm prerequisites
+## Why deterministic rules matter — read this before Step 2
+
+You might wonder: *if Module 5's ML model is the smart one, why bother with deterministic rules at all?*
+
+Three reasons.
+
+**Reason 1 — Defensibility.** A regulator (SEBI, DPB) doesn't accept "the ML decided not to fire" as a reason for missed manipulation. They accept "the rules fired the alert; the ML deprioritized it; here's the SHAP explanation." The rule layer is what makes the platform defensible. ML alone wouldn't be.
+
+**Reason 2 — Reproducibility.** A deterministic rule can be replayed against historical data and produce the same output every time. Any junior analyst can verify "the alert fired because cancel_rate was 0.92 and pct_under_50ms was 0.71." ML model outputs are stochastic and shift over time as models are retrained — fine for ranking, not for evidence.
+
+**Reason 3 — Floor on detection.** Rules are simple thresholds. If the ML model has bugs (or hasn't been retrained, or was sabotaged), rules still fire. The platform has a non-zero detection floor regardless of ML state.
+
+The trade-off: **rules are intentionally permissive.** They WILL fire on legitimate market makers (Case 6) and legitimate news-driven moves (Case 7). The 92% false-positive rate that ARG-3 talks about comes from rules; Module 5's ML model is what reduces it to ~30% by ranking.
+
+**Don't try to fix the false-positive rate by tightening rules.** You'll miss real manipulation. Keep rules permissive; let ML rank.
+
+## Step 1 — Confirm prerequisites
 
 ```sql
 SELECT 'temporal' AS f, COUNT(*) FROM argus_${STUDENT_ID}_gold.member_temporal_features
@@ -24,21 +47,22 @@ SELECT 'temporal' AS f, COUNT(*) FROM argus_${STUDENT_ID}_gold.member_temporal_f
 UNION ALL
 SELECT 'cross_product', COUNT(*) FROM argus_${STUDENT_ID}_gold.cross_product_features
   WHERE trade_date >= CURRENT_DATE - 5;
--- both expected > 0 (Lab 3.1 must have run JOB-07 first)
 ```
 
-### Step 2 — Run JOB-08
+**Both expected > 0.** If either is 0, run Lab 3.1 first.
+
+## Step 2 — Run JOB-08
 
 ```bash
-cde job create --name argus-job_08_alert_candidates \
+cde job create --name "argus-${STUDENT_ID}-job_08_alert_candidates" \
     --type spark \
     --application-file src/transform/job_08_gold_alert_candidates.py \
     --executor-memory 6g --executor-cores 2 --num-executors 6
 
-cde job run --name argus-job_08_alert_candidates
+cde job run --name "argus-${STUDENT_ID}-job_08_alert_candidates"
 ```
 
-**Expected output**:
+**Expected output** (in CDE job logs):
 
 ```
 ==> alert_candidates: 247 candidate alerts written
@@ -46,136 +70,206 @@ cde job run --name argus-job_08_alert_candidates
 
 (Number varies with `--scale` and the planted-case emission count; expect 100–500 at lab scale.)
 
-### Step 3 — Inspect the alerts by rule
+> 💡 **What does each row in `alert_candidates` represent?** One member-firm × instrument × trade_date combination that crossed at least one rule's threshold. Each row carries: the member's `entity_id` (from Module 2's identity resolution), the instrument and date, the rule(s) that fired (`rule_id`), the severity, and a JSON `feature_payload` with all 60 features the ML model in Module 5 will score.
+
+## Step 3 — Inspect alerts by rule
 
 ```sql
-SELECT
-    rule_id,
-    pattern_type,
-    severity,
-    COUNT(*) AS n
+SELECT rule_id, severity, COUNT(*) AS alert_count
 FROM argus_${STUDENT_ID}_gold.alert_candidates
 WHERE trade_date >= CURRENT_DATE - 5
-GROUP BY rule_id, pattern_type, severity
-ORDER BY rule_id;
+GROUP BY rule_id, severity
+ORDER BY rule_id, severity;
 ```
 
-**Expected output**: 5 rows, one per rule R-101 through R-105, with non-zero counts. The exact split depends on synthetic data, but representative output looks like:
+**Expected output:** rows for each (rule, severity) combination, like:
 
-| rule_id | pattern_type | severity | n |
-|---|---|---|---:|
-| R-101 | SPOOFING | HIGH | 18 |
-| R-102 | LAYERING | HIGH | 25 |
-| R-103 | MOMENTUM_IGNITION | MEDIUM | 9 |
-| R-104 | CROSS_PRODUCT | CRITICAL | 4 |
-| R-105 | WASH | MEDIUM | 6 |
+| rule_id | severity | alert_count |
+|---|---|---:|
+| R-101 | HIGH | 47 |
+| R-101 | CRITICAL | 8 |
+| R-102 | HIGH | 32 |
+| R-103 | MEDIUM | 18 |
+| R-104 | CRITICAL | 5 |
+| ... | | |
 
-If R-104 has 0 rows, JOB-07's cross-product features didn't produce any imbalance > 7.0 — most likely cause is the planted Case 2 (Jane Street) didn't land in the time window. Re-check Lab 3.1 / CP-07 first.
+> 💡 **What the rule IDs mean:**
+> - **R-101 SPOOFING** — `pct_cancelled_under_50ms ≥ 0.50 AND cancel_rate ≥ 0.85`
+> - **R-102 LAYERING** — `layered_stack_count ≥ 5`
+> - **R-103 WASH** — cancellation pattern with self-cross signature
+> - **R-104 CROSS_PRODUCT_IMBALANCE** — `ABS(cross_product_delta_imbalance) ≥ 7.0` (Jane Street)
+>
+> Each rule has its own thresholds and severities defined in `src/transform/job_08_*.py`. Severities map to Module 5's downstream prioritization: CRITICAL alerts get scored first, MEDIUM alerts get scored last.
 
-### Step 4 — Verify all 10 manipulation cases surface
+## Step 4 — Verify all 10 planted manipulation cases surface
 
-The 10 planted cases (0–9) should each fire at least one alert. Verify by joining against the planted member firm IDs:
+This is CP-08's core test. The synthetic data plants exactly 10 cases (indices 0–9) and JOB-08 must produce at least one alert per case.
 
 ```sql
-WITH planted AS (
-    SELECT
-        c.case_idx, c.pattern, c.member_firm_id, c.is_real_manipulation
-    FROM (VALUES
-        (0, 'LAYERING',            'BNXM-0042', TRUE),
-        (1, 'SPOOFING',            'BNXM-0117', TRUE),
-        (2, 'MARKING_THE_CLOSE',   'BNXM-0231', TRUE),
-        (3, 'MOMENTUM_IGNITION',   'BNXM-0089', TRUE),
-        (4, 'CROSS_PRODUCT_LAYER', 'BNXM-0042', TRUE),
-        (5, 'WASH_TRADE',          'BNXM-0276', TRUE),
-        (6, 'LEGITIMATE_MM',       'BNXM-0001', FALSE),
-        (7, 'LEGITIMATE_NEWS',     'BNXM-0156', FALSE),
-        (8, 'AMBIGUOUS',           'BNXM-0203', FALSE),
-        (9, 'MULTI_DAY_LAYERING',  'BNXM-0117', TRUE)
-    ) c(case_idx, pattern, member_firm_id, is_real_manipulation)
+-- Check that each planted case has a corresponding alert
+WITH planted_cases AS (
+    SELECT 0 AS case_idx, 'BNXM-0042' AS expected_member, 'R-101' AS expected_rule UNION ALL
+    SELECT 1, 'BNXM-0073', 'R-101' UNION ALL
+    SELECT 2, 'BNXM-0231', 'R-104' UNION ALL  -- Jane Street
+    SELECT 3, 'BNXM-0098', 'R-101' UNION ALL  -- momentum ignition
+    SELECT 4, 'BNXM-0104', 'R-102' UNION ALL  -- multi-product layering
+    SELECT 5, 'BNXM-0167', 'R-103' UNION ALL  -- wash trading
+    SELECT 6, 'BNXM-0001', 'R-101' UNION ALL  -- legitimate MM (will fire, ML will deprioritize)
+    SELECT 7, 'BNXM-0156', 'R-101' UNION ALL  -- legitimate news (same)
+    SELECT 8, 'BNXM-0089', 'R-103' UNION ALL  -- coordinated wash
+    SELECT 9, 'BNXM-0042', 'R-102'           -- multi-day layering (BNXM-0042 again)
 )
 SELECT
-    p.case_idx, p.pattern, p.member_firm_id, p.is_real_manipulation,
+    p.case_idx,
+    p.expected_member,
+    p.expected_rule,
     COUNT(a.alert_id) AS alerts_fired
-FROM planted p
+FROM planted_cases p
 LEFT JOIN argus_${STUDENT_ID}_gold.alert_candidates a
-       ON a.member_firm_id = p.member_firm_id
-      AND a.trade_date >= CURRENT_DATE - 5
-GROUP BY p.case_idx, p.pattern, p.member_firm_id, p.is_real_manipulation
+  ON a.member_firm_id = p.expected_member
+  AND a.rule_id = p.expected_rule
+  AND a.trade_date >= CURRENT_DATE - 5
+GROUP BY p.case_idx, p.expected_member, p.expected_rule
 ORDER BY p.case_idx;
 ```
 
-**Expected output**: 10 rows. Every row should have `alerts_fired > 0`. Cases 6–8 (negative / ambiguous) firing alerts is correct and expected — that's the false-positive flood the legacy platform produces, and exactly what Module 5's ML model is trained to deprioritize.
+**Expected output:** 10 rows. **Every row should show `alerts_fired ≥ 1`.**
 
-### Step 5 — Inspect the feature payload
+If any case shows 0 alerts:
+- Cases 0–5 missing → rule threshold issue, see Common Failure Mode #1
+- Case 9 missing specifically → multi-day window aggregation issue, see Common Failure Mode #2
+- Case 2 missing → cross-product feature issue, see Lab 3.3 Common Failure Mode #1
+- Cases 6, 7 missing → these legitimate cases SHOULD fire — same fix path as 0–5
+
+## Step 5 — Inspect the 60-feature payload
+
+For one alert, look at the full feature payload Module 5's ML model will see:
 
 ```sql
 SELECT
-    alert_id, member_firm_id, instrument_code, severity,
-    features
+    alert_id,
+    rule_id,
+    member_firm_id,
+    instrument_code,
+    severity,
+    feature_payload
 FROM argus_${STUDENT_ID}_gold.alert_candidates
-WHERE rule_id = 'R-104'   -- the most interesting alerts
+WHERE rule_id = 'R-101'
+  AND member_firm_id = 'BNXM-0042'
   AND trade_date >= CURRENT_DATE - 5
-LIMIT 3;
+LIMIT 1;
 ```
 
-**Expected output**: each row's `features` column is a JSON object with non-null values for the headline features:
+**Expected output:** one row. The `feature_payload` is a JSON string with ~60 key-value pairs. Pretty-print it:
 
-```json
-{
-  "cancel_rate": 0.91,
-  "median_time_to_cancel_ms": 78,
-  "p95_time_to_cancel_ms": 423,
-  "pct_cancelled_under_50ms": 0.34,
-  "max_simultaneous_levels": 6,
-  "layered_stack_count": 4,
-  "order_to_trade_ratio_1m": 12.5,
-  "order_to_trade_ratio_5m": 8.4,
-  "order_to_trade_ratio_30m": 5.2,
-  "notional_traded": 47200000
-}
+```sql
+-- Use json_extract or JSON_QUERY (engine-dependent) to drill in
+SELECT
+    alert_id,
+    json_extract_scalar(feature_payload, '$.cancel_rate')              AS cancel_rate,
+    json_extract_scalar(feature_payload, '$.pct_cancelled_under_50ms') AS pct_under_50ms,
+    json_extract_scalar(feature_payload, '$.layered_stack_count')      AS stack_count,
+    json_extract_scalar(feature_payload, '$.member_firm_category')     AS firm_category,
+    json_extract_scalar(feature_payload, '$.entity_prior_str_count')   AS prior_strs
+FROM argus_${STUDENT_ID}_gold.alert_candidates
+WHERE alert_id = '<alert_id_from_above>';
 ```
 
-JOB-09 (Module 5) reads this JSON and feeds the values into the XGBoost ranker. The richer the features, the better the model can separate true positives (Case 0) from false positives (Case 6).
+> 💡 **The 60 features are grouped:**
+> - ~25 temporal features (cancel rate, time-to-cancel, ratios)
+> - ~10 cross-product features (delta imbalance, directional flags)
+> - ~10 entity context features (firm category, prior STR count, asset class)
+> - ~10 instrument context features (ESM/ASM flags, liquidity, volatility)
+> - ~5 market context features (expiry day flag, sector, market session)
+>
+> Module 5 will train an XGBoost model on this payload + historical labels (the legacy SMRITI alerts in `bronze.legacy_alerts`). The model output is a `manipulation_probability` score 0–1 that re-ranks the alerts.
 
-## Checkpoint CP-08 — All 10 manipulation cases surface
+## Step 6 — Verify CP-08 pass conditions
 
-### Pass condition
+CP-08 has **three checks**.
 
-All three checks pass.
-
-### Check 1 — Five rules all fire at least once
-
-The query in Step 3 returns 5 rows, all with non-zero counts.
-
-### Check 2 — All 10 planted cases produce ≥ 1 alert each
-
-The query in Step 4 returns 10 rows; every row has `alerts_fired > 0`. This is the central CP-08 assertion.
-
-### Check 3 — Feature payloads are non-empty
+### Check 1 — `alert_candidates` has rows for the prior trading window
 
 ```sql
 SELECT COUNT(*) FROM argus_${STUDENT_ID}_gold.alert_candidates
-WHERE features IS NULL OR features = '{}'
-  AND trade_date >= CURRENT_DATE - 5;
--- expect: 0 (or very small — < 1% of total alerts)
+WHERE trade_date >= CURRENT_DATE - 5;
 ```
+**Pass if:** > 50. **Fail if:** 0 — JOB-08 didn't fire any alerts (rule thresholds may be set too high, or features are bad).
 
-If this returns a non-trivial count, the feature-attach JOIN in JOB-08 isn't joining cleanly — probably a member×instrument mismatch between `alert_candidates` and `member_temporal_features`. The two should share a key.
+### Check 2 — All 4 rule IDs present
+
+```sql
+SELECT COUNT(DISTINCT rule_id) FROM argus_${STUDENT_ID}_gold.alert_candidates
+WHERE trade_date >= CURRENT_DATE - 5;
+```
+**Pass if:** count = 4 (R-101, R-102, R-103, R-104). **Fail if:** any rule didn't fire.
+
+### Check 3 — All 10 planted cases surface
+
+The Step 4 query returns 10 rows, every one with `alerts_fired ≥ 1`. **Pass if:** all 10 fire. **Fail if:** any show 0.
 
 ---
 
-## Common failure mode — Case 9 (multi-day layering) doesn't fire
+## Common failure mode #1 — Some planted cases missing
 
-**Symptom**: 9 of 10 planted cases produce alerts; Case 9 (BNXM-0117 multi-day layering across the full expiry week) shows `alerts_fired = 0`.
+**Symptom:** Step 4's query shows several cases with `alerts_fired = 0`.
 
-**Diagnosis**: Case 9 is intentionally subtle — the layering activity is spread across 5 trading days, with no single day showing layered_stack_count ≥ 3. JOB-08's R-102 rule is per-day, so it doesn't catch the multi-day pattern.
+**Cause** (in decreasing likelihood):
+1. The case's underlying feature values aren't extreme enough — the rules are too tight for that synthetic data variant.
+2. The case's events are outside the 5-day trade_date window — same fix as Lab 3.1 Common Failure Mode #2.
+3. The synthetic data was regenerated with a non-canonical seed.
 
-This is **a feature, not a bug**. Case 9 is meant to demonstrate the limits of single-day rule-based detection. It's left as a Module 5 / Module 7 extension exercise: train the ML model on multi-day rolling features (Module 5 bonus), or build a custom Atlas lineage query that surfaces sustained activity across cases (Module 7 stretch).
+**Diagnosis:** for the missing case (say, Case 1), look at the underlying features:
+```sql
+SELECT cancel_rate, pct_cancelled_under_50ms, layered_stack_count
+FROM argus_${STUDENT_ID}_gold.member_temporal_features
+WHERE member_firm_id = 'BNXM-0073'
+  AND trade_date >= CURRENT_DATE - 5;
+```
+Compare against rule thresholds (R-101: `pct_cancelled_under_50ms ≥ 0.50 AND cancel_rate ≥ 0.85`). If features are below threshold, the planted case wasn't extreme enough.
 
-**For CP-08 pass condition**: Case 9 firing alerts on at least one of its 5 days is sufficient. The sub-rule R-101 SPOOFING or R-102 LAYERING should fire on at least one day's worth of BNXM-0117 activity. If even that's empty, the synthetic generator is producing very tame Case 9 events — re-generate.
+**Fix:** regenerate data with `--seed 42` (the canonical seed is calibrated to clear thresholds). Don't loosen rule thresholds — that breaks Module 5's training labels.
+
+## Common failure mode #2 — Case 9 (multi-day layering) doesn't fire
+
+**Symptom:** Cases 0–8 fire but Case 9 (multi-day) shows 0 alerts.
+
+**Cause:** R-102's window is per-day. Case 9's pattern only manifests across multiple days. JOB-07 has a multi-day rolling-window aggregation specifically for this; if it's missing, Case 9 invisible.
+
+**Diagnosis:**
+```sql
+-- Check whether multi-day rolling features are populated
+SELECT COUNT(*) FROM argus_${STUDENT_ID}_gold.member_temporal_features
+WHERE rolling_5day_layered_stack_count > 0;
+```
+If 0, the rolling-window logic in JOB-07 isn't producing rows.
+
+**Fix:** check `src/transform/job_07_gold_temporal_features.py` for the rolling-window CTE; ensure it's not commented out. Re-run JOB-07, then re-run JOB-08.
+
+## Common failure mode #3 — Alert count is huge (10,000+)
+
+**Symptom:** JOB-08 produces tens of thousands of alerts instead of hundreds.
+
+**Cause:** rule thresholds are too loose, or the upstream features have an outlier-amplification bug (e.g., divide-by-zero produces Inf which clears any threshold).
+
+**Diagnosis:**
+```sql
+-- Look at the distribution of cancel_rate
+SELECT MIN(cancel_rate), MAX(cancel_rate), AVG(cancel_rate)
+FROM argus_${STUDENT_ID}_gold.member_temporal_features;
+```
+If MAX is > 1.0 or AVG is suspiciously high, features are bad.
+
+**Fix:** re-check Lab 3.1 Common Failure Mode #1 (parent_order_id join issue). If features are clean and you still get too many alerts, the rule thresholds need tightening — but only do this if you'd otherwise miss the manipulation signal. The default thresholds are calibrated; trust them.
 
 ---
 
 ## Pass condition for CP-08
 
-All three checks pass. The candidate-generation layer is now producing actionable, auditable alerts that downstream systems (the ML model in Module 5, the GenAI drafter in Module 6) can consume.
+All three checks pass. With alert candidates populated, the analyst toolbox is finally usable: deterministic rules produce defensible candidates, and the 60-feature payload is ready for Module 5's ML scoring.
+
+## Wrap-up — what you can now do that you couldn't before
+
+You can produce regulator-defensible deterministic alerts on top of feature data. You understand the rule/ML division of labor: rules generate candidates (defensible), ML ranks them (signal-prioritization). You can read JOB-08's threshold logic and predict which member-firm-days will surface as candidates.
+
+Lab 3.3 verifies the cross-product detection (Jane Street pattern) specifically. Allow ~45 minutes.

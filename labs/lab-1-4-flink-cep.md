@@ -1,10 +1,27 @@
 # Lab 1.4 — PyFlink CEP Real-Time Pattern Detection (CP-02b)
 
+> 👋 **Module 1 first-timer?** Read [`docs/module-1-primer.md`](../docs/module-1-primer.md) before starting this lab. About 20 minutes — explains how PyFlink CEP fits with Spark Streaming and SSB SQL.
+
 > ℹ️ **Module:** 1 — CDF + Flink + SSB Streaming Ingest & Real-Time Detection
 >
-> ⏱ **Time budget:** 90 minutes (Day 3 morning)
+> ⏱ **Time budget:** ~75 minutes if it works first try; up to 2 hours if Flink job submission has cluster-specific issues.
 >
 > ✅ **Closes:** ARG-1 (peak detection latency, not just ingest throughput)
+>
+> **Source files:** [`src/ingest/flink_cep/job_10_realtime_spoofing_layering.py`](../src/ingest/flink_cep/job_10_realtime_spoofing_layering.py), [`src/ingest/flink_cep/README.md`](../src/ingest/flink_cep/README.md), [`src/common/naming.py`](../src/common/naming.py)
+
+## What you're going to do
+
+In order:
+
+1. **Read the PyFlink CEP job code** — understand the pattern definitions before deploying. (~15 min)
+2. **Submit the job to Flink** — via CSA gateway, Cloudera Manager UI, or local dev. (~15 min)
+3. **Generate test traffic** with FLOW-SIM continuous mode. (~5 min)
+4. **Watch alerts stream in** — verify the alerts contain the expected fields. (~5 min)
+5. **Compute CP-02b pass condition** — p99 detection latency < 800ms over 100 alerts. (~10 min)
+6. **Cross-check with realtime_alert_stream Iceberg table** — confirm JOB-12 is persisting the alerts. (~5 min)
+
+Total: about 75 minutes, with ~25 minutes of code reading + 50 minutes of execution.
 
 ## What this lab teaches
 
@@ -167,18 +184,66 @@ LIMIT 5;
 
 (Note: this requires JOB-12 from `src/ingest/job_12_realtime_alert_persistence.py` to also be running — typically your instructor starts this once and leaves it; if rows aren't appearing, ask.)
 
-## Lab summary
+## Common failure mode #1 — `No module named 'pyflink'`
 
-You've now deployed a streaming pattern-detection engine that catches spoofing in real-time. The same pattern is also implemented in JOB-08 batch — Module 3 covers that. Lab 1.5 will compare them side-by-side.
+**Symptom:** Job submission fails immediately with `ModuleNotFoundError: No module named 'pyflink'`.
 
-The lesson: **streaming and batch detection complement each other**. Streaming catches it fast (analyst can intervene); batch catches it with full context (legal proof). Neither replaces the other in production surveillance.
+**Cause:** PyFlink isn't available where the job is being submitted. On a CSA gateway it should be pre-installed; if you're running locally, you need to install it.
 
-## Common errors
+**Fix:**
+```bash
+pip install apache-flink==1.17.1
+```
 
-**`No module named 'pyflink'`** — PyFlink not installed in your environment. On a CSA gateway it should be pre-installed; locally do `pip install apache-flink==1.17.1` (matches Cloudera CSA 1.10's Flink version).
+(Match your Cloudera Streaming Analytics version's Flink version. CSA 1.10 ships Flink 1.17. Check with your instructor if unsure.)
 
-**`Topic argus.s001.realtime_alerts.v1 not found`** — re-run `bash sql/provision_environment.sh` to create the new topic. The topic was added in v1.2 of the PRD.
+## Common failure mode #2 — `Topic argus.${STUDENT_ID}.realtime_alerts.v1 not found`
 
-**`State backend exceeded heap size`** — your TTL settings aren't kicking in. Check that the job is using keyed state (the `.key_by(lambda e: e["instrument_code"])` line in `main()`). If so, increase the TaskManager heap (cluster admin task).
+**Symptom:** Job starts but immediately fails with `UnknownTopicOrPartitionException`.
 
-**Alerts firing on legitimate orders** — the threshold (`SPOOF_MIN_QTY = 5_000`) is calibrated for the synthetic data. Real production exchanges tune this empirically.
+**Cause:** the `realtime_alerts.v1` topic wasn't created during your Day 1 provisioning. This topic was added in v1.2 of the PRD and may not exist if your environment was provisioned against an earlier version.
+
+**Fix:**
+```bash
+# Re-run provisioning, which idempotently creates missing topics
+bash sql/provision_environment.sh
+
+# Confirm the topic now exists
+kafka-topics --bootstrap-server ${KAFKA_BROKERS} --list \
+    | grep "argus.${STUDENT_ID}.realtime_alerts"
+```
+
+You should see one line of output. If you see nothing, the provisioning script didn't run cleanly — check its output for errors.
+
+## Common failure mode #3 — `State backend exceeded heap size`
+
+**Symptom:** Flink TaskManager crashes after running for several minutes with an OOM error citing state backend size.
+
+**Cause:** Flink CEP keeps state per key (per `instrument_code` in our case). Without a TTL, that state grows forever. ARGUS sets state TTL to 60 seconds (see `src/common/naming.py: FLINK_STATE_TTL_SECONDS`), but if your job code doesn't apply that TTL, state grows unbounded.
+
+**Diagnosis:**
+```bash
+# In the job source, look for this line:
+grep -n "state_ttl\|StateTtlConfig" src/ingest/flink_cep/job_10_*.py
+```
+You should see a `StateTtlConfig.newBuilder(Time.seconds(60))` call. If you don't, that's the bug.
+
+**Fix:** ensure the keyed state has TTL applied. The reference implementation in `job_10_realtime_spoofing_layering.py` does this correctly. If you've modified the job and removed the TTL, restore it.
+
+## Common failure mode #4 — Alerts firing on legitimate orders
+
+**Symptom:** Hundreds of alerts per minute, far more than the planted manipulation cases would produce. Most "alerts" look like normal trading activity.
+
+**Cause:** the spoofing detection threshold (`SPOOF_MIN_QTY = 5_000` in the job) is too low for your synthetic data — legitimate large orders trigger it.
+
+**Diagnosis:** open `data/generated/orders_synthetic.jsonl.gz` and look at the `qty` distribution. If the median legitimate order is ≥ 5,000, the threshold needs raising.
+
+**Fix:** edit `src/ingest/flink_cep/job_10_realtime_spoofing_layering.py`, raise `SPOOF_MIN_QTY` (e.g., to 25,000), redeploy. Real production exchanges tune this threshold empirically per asset class — there's no universal right number.
+
+## Wrap-up — what you can now do that you couldn't before
+
+You can deploy a Flink streaming job to Cloudera Streaming Analytics, monitor it through the Flink UI, and verify it's emitting alerts to a Kafka topic. You understand the trade-off between Spark Structured Streaming (canonical persistence, ~10s latency) and Flink CEP (sub-second pattern detection). You've measured a real p99 latency on a real streaming detection pipeline.
+
+Most importantly: **ARG-1 is now fully closed.** The throughput half closed in Lab 1.3; the latency half closed here. The legacy MSE platform's worst day — 150K ev/s peak load with no real-time intervention capability — is no longer a problem.
+
+Lab 1.5 deploys the third engine (SQL Stream Builder for the Jane Street cross-product pattern) and runs a 3-engine latency comparison so you can see all three perspectives on the same set of events. Allow about 75 minutes for that one.

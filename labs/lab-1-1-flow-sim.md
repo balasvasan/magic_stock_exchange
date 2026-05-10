@@ -1,38 +1,71 @@
-# Lab 1.1 — FLOW-SIM Oneshot Bulk Load (CP-02)
+# Lab 1.1 — FLOW-SIM Bulk Load (CP-02)
+
+> 👋 **Module 1 first-timer?** Read [`docs/module-1-primer.md`](../docs/module-1-primer.md) before starting this lab. It explains what NiFi, Spark Streaming, PyFlink CEP, SSB SQL are and how the three-engine architecture works. About 20 minutes — well worth the time.
 
 > ℹ️ **Module:** 1 — CDF + Flink + SSB Streaming Ingest & Real-Time Detection
-> **Closes deficiency:** ARG-1 (peak volume crisis)
+> **Closes deficiency:** ARG-1 (peak volume + real-time detection latency)
+> **Time:** ~30 minutes if everything works first try; up to 90 minutes if Kafka or Spark is misbehaving.
 > **Source files:** [`src/ingest/replay_simulator.py`](../src/ingest/replay_simulator.py)
 
-## Objectives
+## What you're going to do
 
-- Understand why FLOW-SIM exists — why we don't just run a Kafka console producer
-- Bulk-load the synthetic events into Kafka so NiFi has something to consume
-- Verify all 11 Kafka topics receive traffic at the expected partition distribution
-- Inspect a single planted manipulation case end-to-end in Kafka before any Spark job touches it
+In order:
 
-## Why FLOW-SIM exists
+1. **Confirm Day 1 outputs are in place** — synthetic data on disk, Kafka topics created. You'll be lost if either is missing, so we check first. (~2 min)
+2. **Run FLOW-SIM in oneshot mode** — push the synthetic events into Kafka so NiFi has something to consume in Lab 1.2. (~10–15 min)
+3. **Verify partition distribution is even** — confirm one partition isn't getting 100× the traffic of others. (~5 min)
+4. **Inspect a single planted manipulation case** — confirm Case 0 (mid-cap pharma layering) is in the Kafka stream end-to-end. (~5 min)
+5. **Verify CP-02 pass conditions** — four named checks; all four must pass before moving on. (~5 min)
 
-NiFi flows need *live* Kafka traffic to demonstrate backpressure handling, DLQ routing, schema-validation failures, and rate-driven autoscaling decisions. There are three obvious alternatives, all worse:
+Total: about 30 minutes of execution + a few minutes of reading and reflection.
 
-- **A direct producer from `data/generated/`**: writes events as fast as the producer's buffer drains. Doesn't simulate realistic timing — events bunch up at start of session and trail off, instead of producing a steady-state firehose.
-- **A console producer**: works for one topic at a time, no rate control, no key extraction, no awareness of which file feeds which topic. Fine for ad-hoc testing; useless for a 10-day capstone.
-- **Replaying real exchange data**: not legally available, and even if it were, the ML training labels (analyst dispositions on confirmed manipulation) are MSE proprietary.
+## Before you begin — prerequisite checklist
 
-FLOW-SIM solves all three: it routes JSONL files to the right Kafka topics with the right partition keys, supports both bulk-load (Day 1) and rate-limited replay (Module 1 throughput tests), and leaves the planted test cases at known indices for downstream verification.
+Confirm each of these is true. **If any aren't, fix that first** — chasing this lab's symptoms when the cause is an earlier-step failure is a frustrating way to spend an hour.
 
-## Procedure
+- [ ] You completed [Lab 0.1 — Environment Provisioning](lab-0-1-environment-provisioning.md) and CP-00, CP-01 both passed
+- [ ] Your `STUDENT_ID` environment variable is set in your current shell — run `echo $STUDENT_ID` and confirm it shows your assigned ID, not blank
+- [ ] Your `KAFKA_BROKERS` and `BUCKET_NAME` environment variables are set
+- [ ] The synthetic data files exist on disk — run `ls data/generated/ | wc -l` and confirm the count is 14
+- [ ] All 11 of your Kafka topics exist — run `kafka-topics --bootstrap-server ${KAFKA_BROKERS} --list | grep -c "argus.${STUDENT_ID}\."` and confirm the count is 11
 
-### Step 1 — Confirm Day 1 setup is clean
+If any item is missing, return to Lab 0.1 and re-run the relevant steps. Don't try to muscle past — the lab depends on these.
+
+## Why FLOW-SIM exists — read this before Step 2
+
+You might wonder: *we already have data files on disk, and Kafka has a built-in console producer — why do we need a custom Python script to load Kafka?*
+
+Three reasons.
+
+**Reason 1 — One file goes to one topic.** Kafka's console producer takes one file and pushes to one topic. We have 14 files going to 11 topics with specific routing rules: `orders_synthetic.jsonl.gz` goes to `argus.${STUDENT_ID}.orders.v1`, `trades_synthetic.jsonl.gz` to `argus.${STUDENT_ID}.trades.v1`, etc. Doing this by hand means 14 console-producer commands, each with the right partition key, each with the right serializer. FLOW-SIM does this in one command.
+
+**Reason 2 — Partition keying matters.** When Kafka pushes a message to a topic, it picks a partition based on the message *key*. For `orders.v1`, the key is `instrument_code` — that means all orders for a given instrument land on the same partition, which lets a downstream consumer process them in order. The console producer doesn't extract a key from the JSON body. FLOW-SIM does, because the keying behavior is what makes the downstream order-book reconstruction work.
+
+**Reason 3 — Same script does both bulk-load and continuous replay.** FLOW-SIM has two modes: `oneshot` (push everything as fast as Kafka accepts, used today) and `continuous` (push at a controlled rate, used in Lab 1.3 for the 150K ev/s test). Having one script that does both means students learn one tool that covers Day 1 setup *and* Module 1 throughput testing.
+
+The take-away: FLOW-SIM isn't extra complexity — it's a tool that solves a real problem the built-in Kafka utilities don't.
+
+## Step 1 — Confirm Day 1 setup is clean
+
+Quick sanity check before any heavy lifting:
 
 ```bash
-ls data/generated/ | wc -l                    # expect 14
-kafka-topics --bootstrap-server ${KAFKA_BROKERS} --list | grep -c argus.   # expect 8
+# Count synthetic data files (expect 14)
+ls data/generated/ | wc -l
+
+# Count your Kafka topics (expect 11)
+kafka-topics --bootstrap-server ${KAFKA_BROKERS} --list | grep -c "argus.${STUDENT_ID}\."
 ```
 
-If either count is wrong, see [Lab 0.1](lab-0-1-environment-provisioning.md) before continuing.
+**Expected output:** the first command prints `14`, the second prints `11`.
 
-### Step 2 — Run FLOW-SIM in oneshot mode
+If either count is wrong, **stop**. Return to [Lab 0.1](lab-0-1-environment-provisioning.md) and re-run the relevant steps. The rest of this lab assumes both numbers are right.
+
+> 💡 **Why these specific numbers?** 14 is the count of generated files (orders, trades, BBO, members, traders, instruments, holidays, news, regulator notices, plus 5 historical-label files). 11 is the count of Kafka topics for your student namespace (9 production + 2 DLQ). Day 1 should have produced exactly these.
+
+## Step 2 — Run FLOW-SIM in oneshot mode
+
+This is the big push. The script reads the JSONL files and pushes their contents into the right Kafka topics with the right partition keys.
 
 ```bash
 python src/ingest/replay_simulator.py --mode oneshot \
@@ -40,104 +73,196 @@ python src/ingest/replay_simulator.py --mode oneshot \
     --bootstrap-servers ${KAFKA_BROKERS}
 ```
 
-**What you should see**: the script processes three files (`orders_synthetic.jsonl.gz`, `trades_synthetic.jsonl.gz`, `bbo_synthetic.jsonl.gz`) and reports per-file event counts and rates. At `--scale 0.05` data (the Day 1 default), expect roughly:
+**What you should see during the run:** a per-file progress display, with rates in events/sec. Something like this:
 
 ```
-==> [oneshot] orders_synthetic.jsonl.gz → argus.${STUDENT_ID}.orders.v1
-      ...
+==> [oneshot] orders_synthetic.jsonl.gz → argus.s001.orders.v1
+      ......................................
       [done] 2,500,000 events at 45,000 ev/s
-==> [oneshot] trades_synthetic.jsonl.gz → argus.${STUDENT_ID}.trades.v1
+==> [oneshot] trades_synthetic.jsonl.gz → argus.s001.trades.v1
       [done] 175,000 events at 38,000 ev/s
-==> [oneshot] bbo_synthetic.jsonl.gz → argus.${STUDENT_ID}.bbo.v1
+==> [oneshot] bbo_synthetic.jsonl.gz → argus.s001.bbo.v1
       [done] 350,000 events at 42,000 ev/s
-==> oneshot complete: 3,025,000 events in 75.3s (40,200 ev/s)
+==> [oneshot] members_synthetic.jsonl.gz → argus.s001.member.cdc.v1
+      [done] 4,500 events at 12,000 ev/s
+==> [oneshot] instruments_synthetic.jsonl.gz → argus.s001.instrument.cdc.v1
+      [done] 850 events at 8,000 ev/s
+... (continues for all 11 topics)
+==> oneshot complete: ~3,030,000 events in ~80s
 ```
 
-(Numbers will vary slightly with cluster sizing.)
+(The exact numbers vary slightly with cluster sizing. Numbers in the millions for `orders`, in the thousands for reference data.)
 
-> 💡 **Tip:** Oneshot mode pushes as fast as Kafka will accept. On a small dev cluster you may see 20K–30K ev/s; on a properly sized production-grade CDF cluster you should hit 50K–100K ev/s sustained. Module 1 CP-03 demands 150K — that's the *continuous* mode test, not this one.
+**Expected wall-clock time:** 5–15 minutes depending on cluster size. On a starter sandbox cluster you may see 20–30K ev/s; on a properly-sized CDF cluster you'll see 50–100K ev/s. Either is fine for Day 1 — this is the *bulk-load* test, not the throughput test.
 
-### Step 3 — Verify Kafka topic distribution
+> 💡 **What if it's much slower than 20K ev/s?** Check your `bootstrap-servers` value. If you're hitting a Kafka cluster across a slow network link (e.g., from a local laptop to a cloud cluster) the round-trip time dominates throughput. Run FLOW-SIM from a node *inside* your cluster's VPC if possible.
 
-In SMM (Streams Messaging Manager) navigate to your CDF cluster and confirm the partition message counts for `argus.${STUDENT_ID}.orders.v1`. They should be roughly **even** across all 48 partitions — variation under ~10× between min and max partition is healthy. Skewed distribution (one partition with 10× the message count of others) means the partition key (`instrument_code`) has very low cardinality, which would mean the synthetic generator picked a tiny instrument universe — re-check `data/generated/instruments.csv` row count.
+> ⚠️ **If the script crashes mid-run with `BrokerNotAvailableError`** — Kafka brokers are flaking. See "Common failure mode #2" at the bottom. **Don't re-run the script blindly** — that creates duplicate events.
+
+## Step 3 — Verify Kafka topic distribution
+
+After FLOW-SIM finishes, the topics should have rows. Let's confirm and check that the rows are spread evenly across partitions (not bunched on one).
+
+### Verify each topic has the expected row count
+
+```bash
+for t in orders.v1 trades.v1 bbo.v1; do
+    full_topic="argus.${STUDENT_ID}.${t}"
+    n=$(kafka-run-class kafka.tools.GetOffsetShell \
+        --bootstrap-server ${KAFKA_BROKERS} \
+        --topic "$full_topic" --time -1 \
+        | awk -F: '{sum += $3} END {print sum}')
+    echo "$full_topic: $n messages"
+done
+```
+
+**Expected output** (numbers approximate):
+
+```
+argus.s001.orders.v1:  2,500,000
+argus.s001.trades.v1:  175,000
+argus.s001.bbo.v1:     350,000
+```
+
+> 💡 **What `GetOffsetShell` actually does**: it asks Kafka "what's the latest offset for each partition of this topic?" Offsets count from 0. If a topic with 48 partitions has offset 50,000 on each, the topic has 48 × 50,000 = 2,400,000 messages total. The `awk` line sums offsets across partitions.
+
+### Verify partition distribution is even
+
+This is the more interesting check. The orders topic has 48 partitions; we want events spread roughly evenly across them. Heavily skewed distribution (one partition has 100× the rows of others) means the partition key has low cardinality, which would mean the synthetic generator picked a tiny instrument universe — which would mean re-generating the data.
 
 ```bash
 kafka-run-class kafka.tools.GetOffsetShell \
     --bootstrap-server ${KAFKA_BROKERS} \
     --topic argus.${STUDENT_ID}.orders.v1 --time -1 \
-    | awk -F: '{print $3}' | sort -n | uniq -c | head
+    | awk -F: '{print $3}' | sort -n
 ```
 
-### Step 4 — Inspect a planted case in Kafka
+**Expected output:** 48 numbers, ranging roughly 30,000 to 100,000 each. The highest should be at most ~10× the lowest.
 
-Confirm Case 0 (mid-cap pharma layering by member firm BNXM-0042) is present in the order stream:
+**Looks healthy:**
+```
+30245
+35012
+35490
+...
+89012
+95442
+```
+(Min 30K, max 95K, ratio 3.2× — fine.)
+
+**Looks broken:**
+```
+112
+245
+...
+89001
+523444
+```
+(Min 112, max 523444, ratio 4,673× — a single instrument is dominating. The synthetic generator made too few instruments.)
+
+If the distribution looks broken, return to Lab 0.1 Step 5 and re-run `data/generate_data.py --seed 42 --out data/generated/`. The seed-42 data is calibrated for healthy distribution.
+
+## Step 4 — Inspect a planted manipulation case
+
+The synthetic generator plants 23 known test cases at fixed indices (0–22). Case 0 is the canonical spoofing-and-layering example: member firm `BNXM-0042` placing rapid-fire NEW + CANCEL orders on a mid-cap pharmaceutical instrument. Modules 2 and 3 will detect this case as a confirmed manipulation pattern. Right now we just want to confirm the case is **in Kafka** end-to-end.
 
 ```bash
 kafka-console-consumer --bootstrap-server ${KAFKA_BROKERS} \
-    --topic argus.${STUDENT_ID}.orders.v1 --from-beginning --max-messages 50000 \
+    --topic argus.${STUDENT_ID}.orders.v1 \
+    --from-beginning \
+    --max-messages 50000 \
     | grep '"planted_case_idx": 0' \
     | head -3
 ```
 
-You should see at least three JSON events tagged `"planted_case_idx": 0` with `"member_firm_id": "BNXM-0042"` and rapid-fire NEW + CANCEL actions. These are the layered orders that Modules 2 and 3 will detect as a confirmed manipulation pattern.
+**What this command does:** consume the first 50,000 messages from the topic (taking ~30 seconds), filter to lines containing the planted-case marker, and show the first 3 matches.
 
-## Checkpoint CP-02 — NiFi/Kafka ingest healthy
+**Expected output:** at least 3 JSON lines, each with `"planted_case_idx": 0` and `"member_firm_id": "BNXM-0042"`. The events should look something like:
 
-### Pass condition
+```json
+{"event_id":"...","action":"NEW","member_firm_id":"BNXM-0042","instrument_code":"BNXM-0042-FUT","quantity":50000,"price":...,"planted_case_idx":0,"event_ts":"2026-03-15T11:23:42.117Z"}
+{"event_id":"...","action":"CANCEL","member_firm_id":"BNXM-0042",...,"planted_case_idx":0,"event_ts":"2026-03-15T11:23:42.243Z"}
+{"event_id":"...","action":"NEW","member_firm_id":"BNXM-0042",...,"planted_case_idx":0,"event_ts":"2026-03-15T11:23:42.358Z"}
+```
 
-Run all four checks; all four must pass.
+> 💡 **What you're seeing:** the spoofer puts a large order in (NEW), waits ~125 ms, cancels it (CANCEL), waits ~115 ms, places another (NEW). The same pattern repeats roughly 5–10 times across the planted case window. Module 1's PyFlink CEP job (you'll deploy it in Lab 1.4) is what catches this pattern in real time.
 
-### Check 1 — All three streaming topics have traffic
+If grep returns 0 lines, the synthetic data wasn't generated with `--seed 42` — the planted cases live at deterministic offsets and seeded data is required. Re-run `data/generate_data.py --seed 42` and reload Kafka.
+
+## Step 5 — Verify CP-02 pass conditions
+
+CP-02 has **four checks**. All four must pass.
+
+### Check 1 — All three streaming topics have non-zero traffic
 
 ```bash
-for t in argus.${STUDENT_ID}.orders.v1 argus.${STUDENT_ID}.trades.v1 argus.${STUDENT_ID}.bbo.v1; do
+for t in orders.v1 trades.v1 bbo.v1; do
     n=$(kafka-run-class kafka.tools.GetOffsetShell \
-        --bootstrap-server ${KAFKA_BROKERS} --topic "$t" --time -1 \
+        --bootstrap-server ${KAFKA_BROKERS} \
+        --topic "argus.${STUDENT_ID}.${t}" --time -1 \
         | awk -F: '{sum += $3} END {print sum}')
-    echo "$t: $n messages"
+    echo "argus.${STUDENT_ID}.${t}: $n"
 done
 ```
 
-**Expected output**: each topic shows a non-zero message count. At `--scale 0.05`:
-- `argus.${STUDENT_ID}.orders.v1`: ~2,500,000
-- `argus.${STUDENT_ID}.trades.v1`: ~175,000
-- `argus.${STUDENT_ID}.bbo.v1`: ~350,000
+**Pass if:** all three counts > 100,000. **Fail if:** any count is 0 or near-zero.
 
-### Check 2 — Partition distribution is even
+### Check 2 — Partition distribution is even on `orders.v1`
 
 ```bash
 kafka-run-class kafka.tools.GetOffsetShell \
-    --bootstrap-server ${KAFKA_BROKERS} --topic argus.${STUDENT_ID}.orders.v1 --time -1 \
-    | awk -F: '{print $3}' | sort -n
+    --bootstrap-server ${KAFKA_BROKERS} \
+    --topic argus.${STUDENT_ID}.orders.v1 --time -1 \
+    | awk -F: '{print $3}' | sort -n \
+    | awk 'NR==1 {min=$1} END {max=$1; print "min:", min, "max:", max, "ratio:", max/min}'
 ```
 
-**Expected output**: 48 partition counts. The maximum-to-minimum ratio should be < 10× (e.g. min ~30k, max ~100k is fine; min 1k max 500k means key skew).
+**Pass if:** ratio < 10. **Fail if:** ratio ≥ 10.
 
-### Check 3 — Planted Case 0 is in the stream
-
-The grep in Step 4 above returns ≥ 3 lines. If it returns 0 lines, the synthetic generator wasn't run with `--seed 42` — re-generate.
-
-### Check 4 — DLQ is empty
+### Check 3 — Planted Case 0 is visible in the stream
 
 ```bash
-kafka-run-class kafka.tools.GetOffsetShell \
-    --bootstrap-server ${KAFKA_BROKERS} --topic argus.${STUDENT_ID}.orders.dlq --time -1 2>&1 | head
+kafka-console-consumer --bootstrap-server ${KAFKA_BROKERS} \
+    --topic argus.${STUDENT_ID}.orders.v1 \
+    --from-beginning --max-messages 50000 \
+    | grep -c '"planted_case_idx": 0'
 ```
 
-**Expected output**: either "Topic does not exist" (the DLQ topic is created on first failure by JOB-01) or a count of 0 across all partitions.
+**Pass if:** count ≥ 3. **Fail if:** count is 0.
 
-If DLQ is non-empty at this stage, FLOW-SIM is producing malformed records — most likely cause is a corrupted `orders_synthetic.jsonl.gz` (re-run `data/generate_data.py`).
+### Check 4 — DLQ topics are empty
+
+```bash
+for dlq in orders.dlq trades.dlq; do
+    n=$(kafka-run-class kafka.tools.GetOffsetShell \
+        --bootstrap-server ${KAFKA_BROKERS} \
+        --topic "argus.${STUDENT_ID}.${dlq}" --time -1 2>/dev/null \
+        | awk -F: '{sum += $3} END {print sum+0}')
+    echo "argus.${STUDENT_ID}.${dlq}: $n"
+done
+```
+
+**Pass if:** both DLQ counts are 0. **Fail if:** either DLQ has messages — that means FLOW-SIM emitted malformed records, which usually means a corrupted data file. Re-run `data/generate_data.py --seed 42`.
 
 ---
 
-## Common failure mode — Kafka rejects messages with `RecordTooLargeException`
+## Common failure mode #1 — Kafka rejects messages with `RecordTooLargeException`
 
-**Symptom**: FLOW-SIM stops mid-run with `kafka.errors.RecordTooLargeError: The message is N bytes when serialized which is larger than the maximum request size`.
+**Symptom:** FLOW-SIM stops mid-run with:
+```
+kafka.errors.RecordTooLargeError: The message is N bytes when serialized which is larger than the maximum request size
+```
 
-**Diagnosis**: a planted-case event (typically Case 3, momentum-ignition) has a very large `book_state_after` JSON body that exceeds the default `max.request.size = 1 MB`. This shouldn't happen with the default generator, but it can happen if `--scale` is set very high and `book_state_after` is enriched with too much depth.
+**Cause:** A planted-case event (typically Case 3, momentum-ignition) has a very large `book_state_after` JSON body that exceeds the broker's `max.request.size` (default 1 MB).
 
-**Fix**: bump the producer config in `replay_simulator.py`:
+**Diagnosis** — confirm by checking the topic's per-message size:
+```bash
+kafka-topics --bootstrap-server ${KAFKA_BROKERS} \
+    --describe --topic argus.${STUDENT_ID}.orders.v1
+```
+Look for the `max.message.bytes` config; if it's < 5 MB, you've found the cause.
 
+**Fix:** bump the producer config in `src/ingest/replay_simulator.py`:
 ```python
 producer = KafkaProducer(
     ...
@@ -145,11 +270,65 @@ producer = KafkaProducer(
     ...
 )
 ```
+Also make sure the broker side allows it — your instructor may need to update the topic-level `max.message.bytes`.
 
-Also make sure the broker side allows it — the topic-level `max.message.bytes` must be ≥ what the producer sends.
+**Prevention next time:** generate data with default `--scale 0.05`. Higher scale produces fatter `book_state_after` payloads.
+
+## Common failure mode #2 — `BrokerNotAvailableError` partway through the run
+
+**Symptom:** FLOW-SIM crashes after pushing some files successfully:
+```
+kafka.errors.NoBrokersAvailable: NoBrokersAvailable
+```
+
+**Cause:** Either a broker actually crashed (rare) or your `KAFKA_BROKERS` env var has a typo (common).
+
+**Diagnosis:**
+```bash
+echo $KAFKA_BROKERS
+# Should show something like: kafka1.cluster:9092,kafka2.cluster:9092,kafka3.cluster:9092
+# If it shows blank or only 1 broker, that's the bug
+```
+
+If only one broker is listed and it goes down, you have no failover. Lab clusters should have ≥ 3 brokers.
+
+**Fix:** ask your instructor for the correct comma-separated broker list, set it, **then re-run FLOW-SIM**. Important: re-running won't create duplicates because the topics will already have the previously-pushed messages. Kafka topics accumulate; FLOW-SIM doesn't dedupe. If you want a clean reset, your instructor will need to delete and recreate the topics. **For Day 1, don't do that** — just continue past the duplicates.
+
+## Common failure mode #3 — All checks pass except partition distribution is skewed
+
+**Symptom:** Check 2 reports `ratio: 247` (or similar large number).
+
+**Cause:** Synthetic data was generated with too few distinct `instrument_code` values, so the partition key collapses onto a few partitions.
+
+**Diagnosis:**
+```bash
+zcat data/generated/instruments_synthetic.jsonl.gz | wc -l
+# Should be ~ 800-1000
+```
+If it's < 200, the generator didn't produce a realistic instrument universe.
+
+**Fix:** re-run the data generator with the canonical seed:
+```bash
+rm -rf data/generated/
+python data/generate_data.py --seed 42 --out data/generated/
+# Then re-run FLOW-SIM oneshot
+```
 
 ---
 
 ## Pass condition for CP-02
 
-All four checks pass. Once they do, you have a Kafka cluster full of realistic order traffic, and you're ready to deploy the NiFi flows + Spark Structured Streaming jobs in [Lab 1.2](lab-1-2-bronze-ingest.md).
+All four checks above pass. When they do:
+
+- ✅ Kafka has roughly 3 million events spread across the streaming topics
+- ✅ Events are distributed evenly across partitions (no hot keys)
+- ✅ Planted Case 0 is identifiable in the stream
+- ✅ DLQ topics are empty (no malformed records)
+
+You're ready for Lab 1.2, where the four NiFi flows and four Spark Streaming jobs will be deployed to consume from these topics and write Bronze.
+
+## Wrap-up — what you can now do that you couldn't before
+
+You can now load synthetic event data into a real Kafka cluster, partitioned by business key, in a single command. You can verify a Kafka topic by reading offsets, confirming distribution, and inspecting individual messages for known patterns. **You've also done your first manipulation-pattern inspection** — you know what a planted spoofing case looks like as raw JSON in Kafka, before any platform job touches it. That's a skill the surveillance team uses every day when investigating real cases.
+
+When you're ready, head to [Lab 1.2 — Bronze Ingest Deployment](lab-1-2-bronze-ingest.md). Allow about 60 minutes for that one — it's the longest lab in Module 1.

@@ -2,6 +2,9 @@
 
 > 📊 **Visual reference**: [Module 3 features + 5 rules](../assets/diagrams/04_module3_cde_features.md) ([SVG](../assets/diagrams/04_module3_cde_features.svg))
 
+> 👋 **New to feature engineering or windowed aggregations?** Read [`docs/module-3-primer.md`](module-3-primer.md) first. About 15 minutes.
+
+
 > **Closes deficiency:** ARG-2 part 2 — cannot express features for spoofing/layering/cross-product detection
 > **Day:** 5
 > **Checkpoints:** CP-07, CP-08, CP-09

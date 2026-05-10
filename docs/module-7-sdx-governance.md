@@ -2,6 +2,8 @@
 
 > 📊 **Visual reference**: [Module 7 SDX governance + CP-19 gate](../assets/diagrams/08_module7_sdx_governance.md) ([SVG](../assets/diagrams/08_module7_sdx_governance.svg))
 
+> 👋 **New to DPDP, Atlas, Ranger, or Iceberg time-travel?** Read [`docs/module-7-primer.md`](module-7-primer.md) first. **Module 7 is the COMPLIANCE module and CP-19 is the COMPLIANCE GATE.** About 25 minutes; required reading.
+
 > **Closes deficiency:** ARG-5 part 2 — no data lineage, no consent governance, no DPDP-compliant erasure
 > **Day:** 9
 > **Checkpoints:** CP-17, CP-18, **CP-19 (COMPLIANCE GATE)**

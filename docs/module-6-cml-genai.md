@@ -2,6 +2,9 @@
 
 > 📊 **Visual reference**: [Module 6 RAG narrative pipeline](../assets/diagrams/07_module6_cml_genai.md) ([SVG](../assets/diagrams/07_module6_cml_genai.svg))
 
+> 👋 **New to RAG, vector embeddings, or LLM prompting?** Read [`docs/module-6-primer.md`](module-6-primer.md) first. About 20 minutes.
+
+
 > **Closes deficiency:** ARG-4 — Suspicious Transaction Report narratives are entirely hand-written, taking 40+ minutes per case
 > **Day:** 8
 > **Checkpoints:** CP-15, CP-16
